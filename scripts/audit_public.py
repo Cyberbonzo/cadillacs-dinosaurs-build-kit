@@ -13,6 +13,7 @@ ALLOWED = {
     'CHANGELOG.md', 'build.py', 'sources.lock.json', 'rom-manifest.json',
     'publish-manifest.json', 'patches/port.patch', 'scripts/audit_public.py',
     'scripts/run-bazzite.sh', 'tests/test_kit.py', '.github/workflows/audit.yml',
+    'README.pt-BR.md', 'CONTRIBUTING.md',
 }
 SECRET = re.compile(rb'(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----)')
 PERSONAL = re.compile(rb'(?:[CD]:[\\/]Users[\\/]|192\.168\.\d+\.\d+|[\w.+-]+@(?:gmail|hotmail|outlook)\.com)', re.I)
@@ -39,7 +40,7 @@ def main():
     for name, expected in manifest.items():
         data = (ROOT / name).read_bytes().replace(b'\r\n', b'\n')
         inspect(name, data)
-        if re.search(r'\u00c3[\u0080-\u00bf]|\u00e2\u20ac|\ufffd', data.decode('utf-8')):
+        if re.search(r'[\u00c2\u00c3][\u0080-\u00bf]|\u00e2[\u0080-\u00bf\u2000-\u2122]|\ufffd', data.decode('utf-8')):
             raise ValueError(f'Corrupted text encoding in {name}')
         if hashlib.sha256(data).hexdigest() != expected:
             raise ValueError(f'Changed file requires review and manifest update: {name}')

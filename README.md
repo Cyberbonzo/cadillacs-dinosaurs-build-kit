@@ -1,48 +1,61 @@
-# Cadillacs and Dinosaurs — Build Kit 0.1.0
+# Cadillacs and Dinosaurs Build Kit
 
-Build an unofficial Windows x64 port of **Cadillacs and Dinosaurs (World 930201)**
-from your own original arcade ROM set. The Windows output also runs on Bazzite
-on the ROG Ally through Proton.
+**English** | [Português (Brasil)](README.pt-BR.md)
 
-**This repository contains no ROM, game executable, translated game program,
-game artwork, audio, screenshots or save states.** It contains build scripts,
-a GPL source patch and compatibility metadata. There are no game downloads.
-You must supply a ROM you are entitled to use. The ROM is checked and processed
-on your computer; the build script never uploads it.
+An unofficial toolkit for building a Windows x64 port of **Cadillacs and Dinosaurs**
+with expanded 16:9 scenery and an in-game cheats menu. The generated executable
+also runs on Bazzite through Proton, including on the ROG Ally.
+
+**Version: 0.1.0 · Required ROM set: dino — World 930201**
+
+The repository provides build scripts and source modifications. It does not
+distribute the ROM, a playable game executable, artwork or audio. Building requires
+a compatible ROM obtained independently and used with the necessary rights.
+All ROM processing takes place locally; the script does not upload game data.
 
 ## Features
 
-- Expanded 16:9 presentation using the game's existing scenery tiles, without
-  stretching the original picture. Some extensions repeat appropriate scenery
-  elements; they are not previously hidden original artwork.
-- Wider enemy drawing and player movement limits.
-- Adapted opening, story cards, transitions and ending presentation.
-- Start during play opens **Paused â†’ Cheats**, with independent
-  **Infinite Ammo** and **Infinite Health** switches (**No / Yes**).
-- English menus and portable settings.
-- Ahead-of-time translated 68000 and Z80 game code. The production build fails
-  if untranslated CPU code is encountered instead of using interpreter fallback.
-  Board, video and sound hardware behavior is still implemented by CPS2Recomp.
+- Expanded 16:9 scenery without stretching the original image.
+- Enemy visibility and player movement adapted to the wider screen.
+- Widescreen adjustments for the opening, transitions, story screens and ending.
+- A pause menu with **Infinite Ammo** and **Infinite Health**, independently
+  selectable as **No / Yes**.
+- English menus and settings stored alongside the game.
+- Local package generation for Windows and Bazzite/Proton.
 
-## Build on Windows
+Scenery extensions use existing game tiles, including repeated elements where
+needed. They are adaptations rather than recovered artwork beyond the original
+screen. The game program is translated to native C++ during the build. Board,
+video and sound behavior is provided by CPS2Recomp; the production executable
+does not fall back to a CPU interpreter when translated code is missing.
 
-Requirements: **Windows x64, Python 3.11 or newer, Git for Windows**, internet
-access for dependencies, and several GB of available disk space. Python and Git
-must be on PATH. No global installation of the downloaded compiler is needed.
+## Requirements
 
-1. Clone or download this repository, preferably into a short path such as
-   `C:\dino-kit`.
-2. Open PowerShell in that folder.
-3. Run, substituting the path to your own ROM:
+- Windows x64 for building.
+- Python 3.11 or newer and Git for Windows, both available on `PATH`.
+- Internet access to download the build dependencies.
+- Several GB of free disk space.
+- The **dino World 930201** ROM set, supplied as a ZIP file.
+
+The compiler and other tools are downloaded into the working directory, without
+requiring a global installation. Version 0.1.0 does not include a Linux build
+script. Bazzite runs the package generated on Windows through Proton.
+
+## Build
+
+Clone the repository or download and extract its source archive. A short path,
+such as `C:\dino-kit`, is recommended. Open PowerShell in that folder and run:
 
 ```powershell
-python build.py --rom "D:\MyROMs\dino.zip"
+python build.py --rom "D:\ROMs\dino.zip"
 ```
 
-The script verifies the 16 required ROM members, downloads the pinned tools and
-CPS2Recomp source, checks their SHA-256 hashes, applies the patch, extracts and
-translates the game locally, compiles it and runs a 1,800-frame native smoke test.
-It then creates:
+Replace the example path with the location of the compatible ROM. The script
+verifies its required files, downloads and verifies the pinned dependencies,
+applies the source changes, translates the game program, compiles the port and
+runs a short native execution test.
+
+Successful builds produce:
 
 ```text
 .local/output/Cadillacs-Dinosaurs-Windows-0.1.0/
@@ -50,97 +63,99 @@ It then creates:
 .local/output/Cadillacs-Dinosaurs-Bazzite-0.1.0.tar.gz
 ```
 
-Launch **PLAY.cmd** in the Windows package. The output includes a local copy of
-the supplied ROM. **Do not publish these generated packages or their contents.**
-The ignored `.local` directory contains private ROM-derived data, tool downloads,
-generated source and logs; it is never part of the public kit.
+On Windows, open **PLAY.cmd** in the Windows package.
 
-To check only your ROM, with no downloads:
+The generated packages contain a copy of the supplied ROM and the executable
+built from it. They are local build outputs, not releases distributed by this
+project. Do not attach them to this repository, its issues or its releases.
 
-```powershell
-python build.py --rom "D:\MyROMs\dino.zip" --verify-rom
-```
-
-Only the **World 930201 parent set (`dino`)** is supported. US, Japanese, bootleg
-and modified sets are not accepted. Matching is by each required member's size
-and hash, not by the ZIP container hash, so recompressing a correct set is fine.
-Missing or different members are reported before any dependency download.
-
-The default build uses at most eight compiler jobs. Use `--jobs 2` on a machine
-with limited RAM. A failed build leaves its logs available for diagnosis; retry
-in a new work directory and optionally reuse the verified download cache:
+### Check ROM compatibility
 
 ```powershell
-python build.py --rom "D:\MyROMs\dino.zip" --work-dir "C:\dino-build-2" --cache-dir ".local\cache" --jobs 4
+python build.py --rom "D:\ROMs\dino.zip" --verify-rom
 ```
 
-## Bazzite / ROG Ally
+This command checks the ROM without downloading tools or building the game.
+The 16 required files are checked by size and hash. ZIP compression and timestamps
+do not affect validation. US, Japanese, bootleg and modified sets are unsupported.
+Incompatible or incomplete sets are rejected before dependency downloads begin.
 
-Version 0.1.0 is **built on Windows**; compilation directly on Bazzite is not
-provided. Transfer the generated Bazzite `.tar.gz` to the Ally, then:
+### Build options and troubleshooting
 
-1. Extract it into a folder under your home directory.
-2. Have Steam and Proton installed. The launcher looks for Proton 11.0,
-   Experimental or 10.0. For another version, set `DINO_PROTON` to its `proton`
-   executable path.
-3. Add the extracted **jogar.sh** as a non-Steam game and launch that shortcut.
-   Do not force an additional Steam compatibility layer on the shell script;
-   the launcher invokes Proton itself.
-4. If the file manager removed execution permission, run `chmod +x jogar.sh`.
+The build uses up to eight compiler jobs by default. Use `--jobs 2` if memory is
+limited. Logs are stored in `.local/logs` when using the default working directory.
 
-The launcher creates its own `compatdata`, logs and user settings inside the
-package directory. No SSH access, account name, device IP or existing Steam
-library configuration is required. It does not edit your other shortcuts.
+To retry a failed build, select a new working directory. The previous download
+cache can be reused; its files are checked again before use:
 
-## Controls
+```powershell
+python build.py --rom "D:\ROMs\dino.zip" --work-dir "C:\dino-build-2" --cache-dir ".local\cache" --jobs 4
+```
 
-Use the existing game controls for movement, attack and jump. During an active
-game, **Start** opens the compact pause menu. D-pad selects items; A enters or
-changes a switch; left/right also changes No/Yes; B goes back; Start resumes.
-During the opening/selection/continue flow, Start keeps its original game role.
+## Run on Bazzite / ROG Ally
 
-Infinite Ammo preserves ammunition while firing an equipped gun; it does not
-create weapons or cover grenades and melee durability. Infinite Health protects
-living players against damage and special-move health cost; it does not resurrect
-a dead player or disable every time limit or scripted death.
+1. Copy the generated Bazzite `.tar.gz` to the device and extract it under the
+   home directory.
+2. Install Steam and a supported Proton version. The launcher checks for
+   Proton 11.0, Proton Experimental and Proton 10.0, in that order.
+3. Add **jogar.sh** from the extracted package to Steam as a non-Steam game.
+4. Launch it from Steam. Leave Steam's forced compatibility option disabled
+   for this shortcut; the script launches Proton itself.
 
-## Scope and known limitations
+If execution permission was lost during extraction, run `chmod +x jogar.sh` in
+the package directory. To use another Proton installation, set `DINO_PROTON` to
+the full path of its `proton` executable before launching the script.
 
-This is an initial experimental release. Windows gameplay and Proton on the ROG
-Ally have been exercised, including sound and gamepad controls. The latest camera
-fixes passed 36,600 test frames across 11 directed cases and four movement checks.
-These checks do not establish that every scene and gameplay combination is free
-of defects. An unexpected exit was reported during manual play; its cause has
-not yet been established.
+The package keeps its Proton prefix, logs and game settings in its own directory.
 
-Completely black fade frames and intentionally dark artwork are part of the
-game; the widescreen work targets unwanted borders and missing scenery. Reports
-should identify the stage, scene and steps to reproduce. Do not attach ROMs,
-extracted game data or generated executables to issues.
+## Pause menu and cheats
 
-## Source, licenses and publication boundary
+During gameplay, press **Start** to open **Paused**, then select **Cheats**.
 
-This kit applies `patches/port.patch` to CPS2Recomp **v1.5.0**, upstream commit
-`eea67d13bd2eccab1712db063ebf2eda06853f2b`. Versions, URLs and checksums are in
-`sources.lock.json`. All translation happens after the user supplies their ROM.
+| Input | Action |
+| --- | --- |
+| D-pad up/down | Select an item |
+| A | Open an item or change its value |
+| D-pad left/right | Change No / Yes |
+| B | Return to the previous menu |
+| Start | Resume gameplay |
 
-Kit software and modifications: **GPL-3.0-only**. This does not license the
-original game content. See [NOTICE.md](NOTICE.md), [LICENSE](LICENSE), and
-[CPS2Recomp](https://github.com/tmcleroy/cps2recomp). No affiliation or endorsement
-by the original game's rights holders is claimed.
+**Infinite Ammo** preserves ammunition when firing an equipped gun. It does not
+create weapons, replenish an already empty weapon, affect grenades or prevent
+melee weapons from breaking.
 
-CI runs public-source auditing and synthetic tests only. It never receives a ROM,
-builds the game or uploads game artifacts. `scripts/audit_public.py` checks an
-explicit text-file allowlist, reviewed checksums, the Git index and reachable
-history. Maintainers must review changes and update `publish-manifest.json` before
-publishing; the manifest alone is not a substitute for reviewing source contents.
+**Infinite Health** protects living players from damage and special-move health
+costs. It does not revive a defeated character or remove all time limits and
+scripted deaths. Each cheat setting is saved independently.
 
-## Resumo em português
+Outside active gameplay, Start retains its normal role in starting or continuing
+a game. Movement, attack and jump use the game's normal controls.
 
-Este repositório é um **kit de construção**, não um download do jogo. No Windows,
-instale Python 3.11+ e Git, abra a pasta do kit e execute
-`python build.py --rom "D:\MinhasROMs\dino.zip"` com sua própria ROM **World 930201**.
-O script baixa as ferramentas oficiais e gera tudo localmente. Os pacotes prontos
-ficam em `.local/output`. No Windows, abra `PLAY.cmd`; no Bazzite, transfira o
-pacote gerado e adicione `jogar.sh` à Steam. A ROM, o executável e os arquivos
-gerados não devem ser enviados para o GitHub.
+## Status and issue reports
+
+Version 0.1.0 is experimental. Windows builds and Bazzite/Proton on the ROG Ally
+have been tested, including audio and controller input. An unexpected exit has
+been reported during gameplay; its cause remains unresolved.
+
+Completely black fade frames and dark areas belonging to the original artwork
+remain part of the presentation. The widescreen changes address missing scenery
+and unwanted borders, rather than removing every black pixel.
+
+For bug reports, include the kit version, operating system, Proton version if
+applicable, affected stage and steps to reproduce. Review logs for personal
+information before sharing them. Do not attach ROMs, extracted game data,
+save states or generated executables.
+
+## Source and licensing
+
+The kit applies `patches/port.patch` to [CPS2Recomp v1.5.0](https://github.com/tmcleroy/cps2recomp),
+commit `eea67d13bd2eccab1712db063ebf2eda06853f2b`.
+Dependency versions, download URLs and SHA-256 hashes are recorded in
+`sources.lock.json`.
+
+The kit software and source modifications are licensed under **GPL-3.0-only**.
+This license does not cover the original game's ROM, artwork, audio or trademarks.
+See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md). This project is not affiliated
+with or endorsed by Capcom or the game's other rights holders.
+
+For contribution checks and publication rules, see [CONTRIBUTING.md](CONTRIBUTING.md).
