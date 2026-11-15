@@ -14,7 +14,7 @@ if [[ -z "$PROTON" ]]; then
     done
 fi
 if [[ ! -x "$PROTON" ]]; then
-    printf 'Proton nÃ£o encontrado. Instale o Proton pela Steam ou defina DINO_PROTON com o caminho do executÃ¡vel proton.\n' >&2
+    printf 'Proton não encontrado. Instale o Proton pela Steam ou defina DINO_PROTON com o caminho do executável proton.\n' >&2
     exit 2
 fi
 if [[ ! -f "$DINO_ROOT/game/dino.exe" || ! -f "$DINO_ROOT/game/roms/dino.zip" ]]; then

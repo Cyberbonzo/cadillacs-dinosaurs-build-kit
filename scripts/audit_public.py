@@ -39,6 +39,8 @@ def main():
     for name, expected in manifest.items():
         data = (ROOT / name).read_bytes().replace(b'\r\n', b'\n')
         inspect(name, data)
+        if re.search(r'\u00c3[\u0080-\u00bf]|\u00e2\u20ac|\ufffd', data.decode('utf-8')):
+            raise ValueError(f'Corrupted text encoding in {name}')
         if hashlib.sha256(data).hexdigest() != expected:
             raise ValueError(f'Changed file requires review and manifest update: {name}')
     inspect('publish-manifest.json', (ROOT / 'publish-manifest.json').read_bytes())

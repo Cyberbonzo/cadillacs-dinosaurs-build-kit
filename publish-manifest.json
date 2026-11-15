@@ -5,13 +5,13 @@
   "CHANGELOG.md": "527916b41041995056fe8ffe367077811bb71ebe592aed76854fd6e1b980abcc",
   "LICENSE": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
   "NOTICE.md": "07918d2cb9204620a39083a3426c32e3bcf96bba2ab1ccfd7ade47057c5b253f",
-  "README.md": "631b82c5323fe5f25b1e9553d00db8486b0f1eb31b1e023d8c7bc89c4355300f",
+  "README.md": "5b3b0547867a4eb4b3f360a898581c5fd437219b01c713e4595c1abca609935c",
   "VERSION": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
   "build.py": "676e2163f3becdc67e9048d0e58287b3abb90b7a1db4f2f669bb0c459454dc69",
   "patches/port.patch": "566918634caf747a66e086ee1825d3fa9440dfdf679555dc472d681b45f7af02",
   "rom-manifest.json": "5c44c54c9d3080a06ebe6b30e3cedcb5e40e7308d66190af6a2f2ff4fe9d625c",
-  "scripts/audit_public.py": "2529f3b4d0148909f41672f9aeacf5a62574028763d990a71cc1c42835738bea",
-  "scripts/run-bazzite.sh": "4d3a09319094f000ad39edab115dbcbebd2ed6dab33505970a5ae7e2e781e1da",
+  "scripts/audit_public.py": "664fe1ee1a8bfb7ab8fdefe600a823cf948dec6670f4b3fa1ef048732f3e78d9",
+  "scripts/run-bazzite.sh": "94e5a30ea1716a743ba9e9bbb0cd230f0efb25571469e1c6a97a5cd9ead71273",
   "sources.lock.json": "bdee8f0e80fbf43919f770bbbb81e31f2dfbc3209bb9692c8fd914c55614727d",
   "tests/test_kit.py": "b9e0d4ebb06bd8807b7a78703cdeb9d551c9f40258acb776c8770856ab4c62ed"
 }

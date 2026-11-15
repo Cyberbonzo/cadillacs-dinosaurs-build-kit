@@ -1,4 +1,4 @@
-# Cadillacs and Dinosaurs â€” Build Kit 0.1.0
+# Cadillacs and Dinosaurs — Build Kit 0.1.0
 
 Build an unofficial Windows x64 port of **Cadillacs and Dinosaurs (World 930201)**
 from your own original arcade ROM set. The Windows output also runs on Bazzite
@@ -135,12 +135,12 @@ explicit text-file allowlist, reviewed checksums, the Git index and reachable
 history. Maintainers must review changes and update `publish-manifest.json` before
 publishing; the manifest alone is not a substitute for reviewing source contents.
 
-## Resumo em portuguÃªs
+## Resumo em português
 
-Este repositÃ³rio Ã© um **kit de construÃ§Ã£o**, nÃ£o um download do jogo. No Windows,
+Este repositório é um **kit de construção**, não um download do jogo. No Windows,
 instale Python 3.11+ e Git, abra a pasta do kit e execute
-`python build.py --rom "D:\MinhasROMs\dino.zip"` com sua prÃ³pria ROM **World 930201**.
+`python build.py --rom "D:\MinhasROMs\dino.zip"` com sua própria ROM **World 930201**.
 O script baixa as ferramentas oficiais e gera tudo localmente. Os pacotes prontos
 ficam em `.local/output`. No Windows, abra `PLAY.cmd`; no Bazzite, transfira o
-pacote gerado e adicione `jogar.sh` Ã  Steam. A ROM, o executÃ¡vel e os arquivos
-gerados nÃ£o devem ser enviados para o GitHub.
+pacote gerado e adicione `jogar.sh` à Steam. A ROM, o executável e os arquivos
+gerados não devem ser enviados para o GitHub.
