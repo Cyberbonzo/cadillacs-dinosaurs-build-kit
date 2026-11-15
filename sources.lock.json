@@ -1,0 +1,41 @@
+{
+  "upstream_commit": "eea67d13bd2eccab1712db063ebf2eda06853f2b",
+  "downloads": {
+    "source": {
+      "url": "https://github.com/tmcleroy/cps2recomp/archive/refs/tags/v1.5.0.zip",
+      "sha256": "b770aa0d36e52e1e78fcf08be4a39f136c773ab677894c3431fa78247007b494",
+      "archive": "source.zip",
+      "root": "cps2recomp-1.5.0"
+    },
+    "llvm": {
+      "url": "https://github.com/mstorsjo/llvm-mingw/releases/download/20261104/llvm-mingw-20261104-ucrt-x86_64.zip",
+      "sha256": "552191b5754c49a5a20723276a6fc56541ea1922c4c50b7b669022333fc1b40f",
+      "archive": "llvm.zip",
+      "root": "llvm-mingw-20261104-ucrt-x86_64"
+    },
+    "sdl": {
+      "url": "https://github.com/libsdl-org/SDL/releases/download/release-3.4.20/SDL3-devel-3.4.20-mingw.zip",
+      "sha256": "5d321d3d2d499cfabad3023921e4b56bbec03558060f4e195ce626d200126442",
+      "archive": "sdl.zip",
+      "root": "SDL3-3.4.20"
+    },
+    "zlib": {
+      "url": "https://github.com/madler/zlib/releases/download/v1.4/zlib-1.4.tar.gz",
+      "sha256": "02dd159783677a749c04adbdd02b55b8a2bcc7e054f51b76b549199a916ad584",
+      "archive": "zlib.tar.gz",
+      "root": "zlib-1.4"
+    },
+    "cmake": {
+      "url": "https://github.com/Kitware/CMake/releases/download/v4.1.3/cmake-4.1.3-windows-x86_64.zip",
+      "sha256": "010d496453fdc5d11f88dbbcc0a5e54c5db7d9e04e008f516087d9d163301d89",
+      "archive": "cmake.zip",
+      "root": "cmake-4.1.3-windows-x86_64"
+    },
+    "ninja": {
+      "url": "https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-win.zip",
+      "sha256": "26a40fa8595694dec2fad4911e62d29e10525d2133c9a4230b66397774ae25bf",
+      "archive": "ninja.zip",
+      "root": "."
+    }
+  }
+}

@@ -1,0 +1,2873 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -34,7 +34,11 @@
+ if (GEN_SOURCES)
+     message(STATUS "cps2recomp: ${GAME}: translated code found in ${WORK_DIR}/gen")
+ else ()
+-    message(STATUS "cps2recomp: ${GAME}: no translated code yet (interpreter only)")
++    if (GAME STREQUAL "dino")
++        message(STATUS "cps2recomp: dino: ROM extraction only; native code required for gameplay")
++    else ()
++        message(STATUS "cps2recomp: ${GAME}: no translated code yet (interpreter only)")
++    endif ()
+     set(GEN_SOURCES runtime/no_blocks.cpp)
+ endif ()
+ 
+@@ -90,6 +94,9 @@
+ else ()
+     add_executable(${GAME} ${PORT_SOURCES} ${MACHINE_SOURCES} ${GEN_SOURCES} ${GEN_Z80_SOURCES})
+ endif ()
++if (GAME STREQUAL "dino")
++    target_compile_definitions(${GAME} PRIVATE DINO_NATIVE_ONLY)
++endif ()
+ # The check build ('make check-blocks'): the same, with every translated block run beside the interpreter
+ # and compared (runtime/recomp.cpp)
+ add_executable(${GAME}-check EXCLUDE_FROM_ALL ${PORT_SOURCES} ${MACHINE_SOURCES} ${GEN_SOURCES} ${GEN_Z80_SOURCES})
+--- a/games/dino/entries.txt
++++ b/games/dino/entries.txt
+@@ -1,4 +1,4 @@
+-# Places the game's code was seen to reach in ways the translator cannot follow
++# Discovered code entry addresses, including stage, attract and ending coverage.
+ 000542
+ 000554
+ 00058E
+@@ -370,6 +370,26 @@
+ 02B342
+ 02B47E
+ 0326F4
++033334
++03334A
++03336E
++03339A
++0333A4
++0333D0
++033428
++03342E
++033434
++033444
++03349E
++0334A6
++0334AE
++0334B2
++0334B6
++033500
++033554
++033558
++03355C
++033564
+ 03388A
+ 0338A6
+ 0338B6
+@@ -1006,11 +1026,36 @@
+ 05FA86
+ 05FFB8
+ 05FFC6
++068794
++068DD0
++068DDE
++068DE4
++068DEC
++068DFE
++068E20
++068E34
++068E48
++068EDC
+ 0755F4
+ 075608
+ 075644
+ 075656
+ 0756BE
++076420
++07644A
++07645A
++076460
++076464
++076468
++07646C
++076470
++076474
++076660
++076686
++076698
++0766A8
++0766AC
++0766B0
+ 076D86
+ 076D94
+ 076DA4
+@@ -1210,6 +1255,62 @@
+ 09ABDC
+ 09ABE2
+ 09ABE8
++09C04A
++09C06A
++09C070
++09C080
++09C088
++09C090
++09C096
++09C0A6
++09C21C
++09C224
++09C22A
++09C252
++09C26E
++09C278
++09C29C
++09C2A8
++09C2B0
++09C2C0
++09C2DE
++09C2EC
++09C2FA
++09C308
++09C318
++09C328
++09C338
++09C340
++09C34A
++09C386
++09C3D4
++09C3DC
++09C3E4
++09C3EE
++09C406
++09C426
++09C430
++09C46C
++09C476
++09C4B2
++09C4EE
++09C52A
++09C534
++09C570
++09C5AC
++09C5B6
++09C5BE
++09C5C6
++09C5CE
++09C5D8
++09C5E2
++09C5EC
++09C604
++09C63E
++09C668
++09C69A
++09C788
++09C790
+ 09D048
+ 09D050
+ 09D054
+--- a/games/dino/entries.txt.z80
++++ b/games/dino/entries.txt.z80
+@@ -1,399 +1,399 @@
+-# Places the game's code was seen to reach in ways the translator cannot follow
+-0279
+-027D
+-0289
+-028A
+-02B4
+-02FD
+-0303
+-031B
+-031E
+-0322
+-0353
+-0384
+-03C7
+-03CD
+-03DE
+-0401
+-040A
+-040C
+-0410
+-041C
+-043C
+-07AE
+-07BD
+-0829
+-0831
+-08A1
+-08E1
+-0907
+-090D
+-099D
+-09A5
+-09A7
+-0CC2
+-0CCA
+-0CCB
+-0CCD
+-0CD0
+-0CD3
+-0CD4
+-0CD8
+-0CD9
+-0CE2
+-0CE5
+-0CE6
+-0CE9
+-0CEA
+-0CEC
+-0CEF
+-0CF0
+-0CF2
+-0CF8
+-0CFD
+-0D00
+-0D03
+-0D04
+-0D07
+-0D0A
+-0D0C
+-0D0D
+-0D0F
+-0D10
+-0D13
+-0D14
+-0D15
+-0D18
+-0D19
+-0D1C
+-0D1E
+-0D1F
+-0D20
+-0D21
+-0D22
+-0D25
+-0D26
+-0D27
+-0D2B
+-0D2D
+-0D30
+-0D31
+-0D32
+-0D35
+-0D36
+-0D39
+-0D3A
+-0D3C
+-0D3F
+-0D42
+-0D44
+-0D47
+-0D4A
+-0D4F
+-0D50
+-0D53
+-0D54
+-0D55
+-0D58
+-0D59
+-0D5A
+-0D5D
+-0D5E
+-0D60
+-0D61
+-0D62
+-0D63
+-0D65
+-0D69
+-0D6B
+-0D6E
+-0D6F
+-0D71
+-0D72
+-0D75
+-0D78
+-0D7A
+-0D7E
+-0D81
+-0D84
+-0D87
+-0D8A
+-0D8C
+-0D90
+-0D93
+-0D96
+-0D97
+-0D98
+-0D9B
+-0D9E
+-0DA1
+-0DA2
+-0DA3
+-0DA5
+-0DA6
+-0DA9
+-0DAC
+-0DAD
+-0DAE
+-0DAF
+-0DB4
+-0DB7
+-0DBA
+-0DBD
+-0DC0
+-0DC1
+-0DC4
+-0DC5
+-0DC8
+-0DCE
+-0DCF
+-0DD2
+-0DDD
+-0DE0
+-0DE3
+-0DE4
+-0DE7
+-0DEA
+-0DEB
+-0DEE
+-0DF0
+-0DF3
+-0DF4
+-0DF7
+-0DFA
+-0DFD
+-0E00
+-0E06
+-0E09
+-0E0B
+-0E0C
+-0E0D
+-0E0E
+-0E11
+-0E13
+-0E14
+-0E18
+-0E1C
+-0E1D
+-0E2E
+-0E34
+-0E37
+-0E38
+-0E3E
+-0E44
+-0E4A
+-0E4D
+-0E59
+-0E5C
+-0E72
+-0E75
+-0E76
+-0E79
+-0E7B
+-0E7C
+-0E7F
+-0E80
+-0E83
+-0E84
+-0E87
+-0E89
+-0E8B
+-0E8D
+-0E8F
+-0E90
+-0E93
+-0E96
+-0E97
+-0E9A
+-0E9D
+-0EA0
+-0EA3
+-0EA4
+-0EA5
+-0EBB
+-0EBF
+-0EC3
+-0EC6
+-0EC9
+-0ECE
+-0ED0
+-0ED3
+-0ED7
+-0EDC
+-0EDF
+-0EE2
+-0EE6
+-0EF8
+-0F00
+-0F19
+-0F29
+-0F32
+-0F3A
+-0F40
+-0F41
+-0F44
+-0F48
+-0F4A
+-0F4D
+-0F50
+-0F56
+-0F59
+-0F5D
+-0F60
+-0F76
+-0F7A
+-0F7D
+-0F84
+-0F85
+-0F86
+-0F89
+-0F8A
+-0F8E
+-0F8F
+-0F92
+-0F96
+-0F9A
+-0F9E
+-0F9F
+-0FA3
+-0FA4
+-0FA7
+-0FAF
+-0FB3
+-0FB9
+-0FBC
+-0FC0
+-0FC6
+-0FC7
+-0FCA
+-0FCD
+-0FD0
+-0FD1
+-0FD2
+-0FD3
+-0FD4
+-0FD5
+-0FD6
+-0FD7
+-0FD8
+-0FDA
+-0FDD
+-0FDE
+-0FDF
+-0FE0
+-0FE3
+-0FE4
+-0FE5
+-0FE7
+-0FE9
+-0FEA
+-0FEB
+-0FEC
+-0FEE
+-0FF1
+-0FF2
+-0FF5
+-0FF6
+-0FF8
+-0FFC
+-0FFF
+-1002
+-1005
+-1030
+-1036
+-1039
+-103C
+-105C
+-10B4
+-10B7
+-10CE
+-10F0
+-10F3
+-1120
+-1157
+-115D
+-1164
+-116D
+-117A
+-117D
+-118C
+-1192
+-1193
+-120B
+-120C
+-120F
+-1212
+-1215
+-1218
+-121B
+-121C
+-1227
+-122A
+-122D
+-1230
+-1233
+-1236
+-1239
+-123A
+-123C
+-123E
+-123F
+-1241
+-1243
+-1245
+-1246
+-1249
+-124C
+-124F
+-1252
+-1255
+-1258
+-125B
+-125E
+-125F
+-1261
+-1263
+-1265
+-1268
+-126B
+-126E
+-1271
+-1274
+-1277
+-127A
+-127D
+-127E
+-1280
+-1282
+-1284
+-1287
+-128A
+-128D
+-128E
+-128F
+-1291
+-1293
+-1296
+-1297
+-1299
+-129B
+-129C
+-129D
+-12A0
+-12A1
+-12A3
+-12A6
+-12A7
+-12A8
+-12AA
+-12AD
+-12AE
+-12AF
+-12B0
+-12B3
+-12B4
+-12B5
+-12B8
+-12B9
+-12BC
+-12BF
++# Discovered code entry addresses, including stage, attract and ending coverage.
++000279
++00027D
++000289
++00028A
++0002B4
++0002FD
++000303
++00031B
++00031E
++000322
++000353
++000384
++0003C7
++0003CD
++0003DE
++000401
++00040A
++00040C
++000410
++00041C
++00043C
++0007AE
++0007BD
++000829
++000831
++0008A1
++0008E1
++000907
++00090D
++00099D
++0009A5
++0009A7
++000CC2
++000CCA
++000CCB
++000CCD
++000CD0
++000CD3
++000CD4
++000CD8
++000CD9
++000CE2
++000CE5
++000CE6
++000CE9
++000CEA
++000CEC
++000CEF
++000CF0
++000CF2
++000CF8
++000CFD
++000D00
++000D03
++000D04
++000D07
++000D0A
++000D0C
++000D0D
++000D0F
++000D10
++000D13
++000D14
++000D15
++000D18
++000D19
++000D1C
++000D1E
++000D1F
++000D20
++000D21
++000D22
++000D25
++000D26
++000D27
++000D2B
++000D2D
++000D30
++000D31
++000D32
++000D35
++000D36
++000D39
++000D3A
++000D3C
++000D3F
++000D42
++000D44
++000D47
++000D4A
++000D4F
++000D50
++000D53
++000D54
++000D55
++000D58
++000D59
++000D5A
++000D5D
++000D5E
++000D60
++000D61
++000D62
++000D63
++000D65
++000D69
++000D6B
++000D6E
++000D6F
++000D71
++000D72
++000D75
++000D78
++000D7A
++000D7E
++000D81
++000D84
++000D87
++000D8A
++000D8C
++000D90
++000D93
++000D96
++000D97
++000D98
++000D9B
++000D9E
++000DA1
++000DA2
++000DA3
++000DA5
++000DA6
++000DA9
++000DAC
++000DAD
++000DAE
++000DAF
++000DB4
++000DB7
++000DBA
++000DBD
++000DC0
++000DC1
++000DC4
++000DC5
++000DC8
++000DCE
++000DCF
++000DD2
++000DDD
++000DE0
++000DE3
++000DE4
++000DE7
++000DEA
++000DEB
++000DEE
++000DF0
++000DF3
++000DF4
++000DF7
++000DFA
++000DFD
++000E00
++000E06
++000E09
++000E0B
++000E0C
++000E0D
++000E0E
++000E11
++000E13
++000E14
++000E18
++000E1C
++000E1D
++000E2E
++000E34
++000E37
++000E38
++000E3E
++000E44
++000E4A
++000E4D
++000E59
++000E5C
++000E72
++000E75
++000E76
++000E79
++000E7B
++000E7C
++000E7F
++000E80
++000E83
++000E84
++000E87
++000E89
++000E8B
++000E8D
++000E8F
++000E90
++000E93
++000E96
++000E97
++000E9A
++000E9D
++000EA0
++000EA3
++000EA4
++000EA5
++000EBB
++000EBF
++000EC3
++000EC6
++000EC9
++000ECE
++000ED0
++000ED3
++000ED7
++000EDC
++000EDF
++000EE2
++000EE6
++000EF8
++000F00
++000F19
++000F29
++000F32
++000F3A
++000F40
++000F41
++000F44
++000F48
++000F4A
++000F4D
++000F50
++000F56
++000F59
++000F5D
++000F60
++000F76
++000F7A
++000F7D
++000F84
++000F85
++000F86
++000F89
++000F8A
++000F8E
++000F8F
++000F92
++000F96
++000F9A
++000F9E
++000F9F
++000FA3
++000FA4
++000FA7
++000FAF
++000FB3
++000FB9
++000FBC
++000FC0
++000FC6
++000FC7
++000FCA
++000FCD
++000FD0
++000FD1
++000FD2
++000FD3
++000FD4
++000FD5
++000FD6
++000FD7
++000FD8
++000FDA
++000FDD
++000FDE
++000FDF
++000FE0
++000FE3
++000FE4
++000FE5
++000FE7
++000FE9
++000FEA
++000FEB
++000FEC
++000FEE
++000FF1
++000FF2
++000FF5
++000FF6
++000FF8
++000FFC
++000FFF
++001002
++001005
++001030
++001036
++001039
++00103C
++00105C
++0010B4
++0010B7
++0010CE
++0010F0
++0010F3
++001120
++001157
++00115D
++001164
++00116D
++00117A
++00117D
++00118C
++001192
++001193
++00120B
++00120C
++00120F
++001212
++001215
++001218
++00121B
++00121C
++001227
++00122A
++00122D
++001230
++001233
++001236
++001239
++00123A
++00123C
++00123E
++00123F
++001241
++001243
++001245
++001246
++001249
++00124C
++00124F
++001252
++001255
++001258
++00125B
++00125E
++00125F
++001261
++001263
++001265
++001268
++00126B
++00126E
++001271
++001274
++001277
++00127A
++00127D
++00127E
++001280
++001282
++001284
++001287
++00128A
++00128D
++00128E
++00128F
++001291
++001293
++001296
++001297
++001299
++00129B
++00129C
++00129D
++0012A0
++0012A1
++0012A3
++0012A6
++0012A7
++0012A8
++0012AA
++0012AD
++0012AE
++0012AF
++0012B0
++0012B3
++0012B4
++0012B5
++0012B8
++0012B9
++0012BC
++0012BF
+--- a/games/dino/src/game.cpp
++++ b/games/dino/src/game.cpp
+@@ -18,6 +18,14 @@
+ void ModesFrame(Machine &machine);
+ void ModesState(Archive &ar);
+ void BoardFrame(Machine &machine);
++void RegisterDinoWide();
++void RegisterDinoObjectsWide();
++void RegisterDinoMovementWide();
++void RegisterDinoCheats();
++bool DinoAttractDemo();
++void DinoWideBeforeFrame(Machine &machine);
++void DinoWideAfterFrame(Machine &machine);
++void DinoSpecialAfterFrame(Machine &machine);
+ 
+ namespace {
+     using namespace dino;
+@@ -61,6 +69,8 @@
+     }
+ 
+     void Frame(Machine &machine) {
++        DinoWideAfterFrame(machine);
++        DinoSpecialAfterFrame(machine);
+         BoardFrame(machine);
+         ModesFrame(machine);
+         ViewerFrame(machine);
+@@ -78,14 +88,15 @@
+         }
+         for (int n = 0; n < kPlayers; n++) {
+             const uint32_t p = Player(n);
+-            if (Ram8(p + kInPlay) != 1) {
++            const uint8_t active = Ram8(p + kInPlay);
++            if (active == 0) {
+                 continue;
+             }
+             const uint8_t health = Ram8(p + kHealth);
+             if (FeatureOn("infinite_health") && health != 0 && health < kHealthFull) {
+                 SetRam8(p + kHealth, kHealthFull);
+             }
+-            if (FeatureOn("infinite_lives") && Ram8(p + kLives) < 2) {
++            if (active == 1 && FeatureOn("infinite_lives") && Ram8(p + kLives) < 2) {
+                 SetRam8(p + kLives, 2);
+             }
+         }
+@@ -101,6 +112,15 @@
+     RegisterMusic();
+     RegisterBoard();
+     RegisterModes();
++    RegisterDinoWide();
++    RegisterDinoObjectsWide();
++    RegisterDinoMovementWide();
++    RegisterDinoCheats();
++    game.startPauseFeature = [](int player) -> const char * {
++        return player >= 0 && player < dino::kPlayers && !ChoicesLeftOut() && !DinoAttractDemo() &&
++               Ram8(dino::kStep) == 0x0C && Ram8(dino::Player(player) + dino::kInPlay) != 0
++                   ? "infinite_ammo" : nullptr;
++    };
+     game.features.push_back({"free_play", "Game", "Free play", "Start works without a coin.", kFeatureEnhanced});
+     game.features.push_back({"skip_intro", "Game", "Straight to the title",
+                              "When the game starts, and when it is reset, goes straight to the title: the board's start, its version "
+@@ -109,11 +129,15 @@
+     game.features.push_back({"start_stage", "Game", "Start at stage",
+                              "A new game starts at the beginning of the stage chosen (the board starts at stage 1).", 0,
+                              {"Stage 1", "Stage 2", "Stage 3", "Stage 4", "Stage 5", "Stage 6", "Stage 7", "Stage 8"}});
+-    game.features.push_back({"infinite_health", "Cheats", "Infinite health", "No player's health goes down."});
++    game.features.push_back({"infinite_health", "Cheats", "Infinite Health",
++                             "Keeps player health full. Turn off to take damage normally.", 0, {"No", "Yes"}});
+     game.features.push_back({"infinite_lives", "Cheats", "Infinite lives", "A player who goes down always has another life."});
+     game.features.push_back({"infinite_time", "Cheats", "Infinite time", "The stage's clock stands still."});
+     AddHook(0x00A9F2, "GameBegins", GameBegins);
+-    game.beforeFrame = ModesBeforeFrame;
++    game.beforeFrame = [](Machine &machine) {
++        ModesBeforeFrame(machine);
++        DinoWideBeforeFrame(machine);
++    };
+     game.frame = Frame;
+     game.state = ModesState;
+     OwnFeatures({"start_stage"});
+--- a/machine/m68k.cpp
++++ b/machine/m68k.cpp
+@@ -326,6 +326,61 @@
+     return m_cycles;
+ }
+ 
++void M68K::NativeCheck(unsigned reg, int16_t bound, uint32_t next, unsigned operandCycles) {
++    pc = next;
++    const int16_t value = static_cast<int16_t>(d[reg]);
++    cycles += 10 + operandCycles;
++    if (value < 0 || value > bound) {
++        flagN = value < 0;
++        Exception(6, pc, -1);
++        cycles += 30;
++    }
++}
++
++void M68K::NativeDivide(unsigned reg, uint16_t source, bool isSigned, uint32_t next, unsigned operandCycles) {
++    pc = next;
++    if (source == 0) {
++        Exception(5, pc, -1);
++        flagN = flagZ = flagV = flagC = false;
++        cycles += 42;
++        return;
++    }
++    flagZ = flagC = false;
++    if (isSigned) {
++        const int32_t dividend = static_cast<int32_t>(d[reg]);
++        const int16_t divisor = static_cast<int16_t>(source);
++        const int64_t quotient = static_cast<int64_t>(dividend) / divisor;
++        const int64_t remainder = static_cast<int64_t>(dividend) % divisor;
++        const uint32_t magnitude = static_cast<uint32_t>(dividend < 0 ? -static_cast<int64_t>(dividend) : dividend);
++        const uint32_t limit = static_cast<uint32_t>(std::abs(static_cast<int32_t>(divisor))) << 16;
++        if (magnitude >= limit && divisor != -0x8000) {
++            flagN = flagV = true;
++        } else {
++            flagZ = quotient == 0;
++            flagV = quotient != static_cast<int16_t>(quotient);
++            if (flagV) {
++                flagN = true;
++            } else {
++                d[reg] = static_cast<uint16_t>(quotient) | (static_cast<uint32_t>(static_cast<uint16_t>(remainder)) << 16);
++                flagN = quotient & 0x8000;
++            }
++        }
++        cycles += 158;
++    } else {
++        const uint32_t quotient = d[reg] / source, remainder = d[reg] % source;
++        flagZ = quotient == 0;
++        flagV = quotient > 0xFFFF;
++        if (flagV) {
++            flagN = true;
++        } else {
++            d[reg] = quotient | (remainder << 16);
++            flagN = quotient & 0x8000;
++        }
++        cycles += 140;
++    }
++    cycles += operandCycles;
++}
++
+ void M68K::Interpret(uint32_t address) {
+     pc = address;
+     m_cycles = 0;
+@@ -334,6 +389,10 @@
+ }
+ 
+ void M68K::Execute(uint16_t op) {
++#ifdef DINO_NATIVE_ONLY
++    fprintf(stderr, "native-only: untranslated 68000 instruction at %06X (opcode %04X); execution stopped, no interpreter used\n", pc - 2, op);
++    exit(6);
++#else
+     using Kind = Operand::Kind;
+     const uint32_t at = pc - 2; // the instruction's address
+     instruction = at;
+@@ -935,6 +994,7 @@
+     default: break;
+     }
+     Illegal(op, at);
++#endif
+ }
+ 
+ void M68K::Serialize(Archive &ar) {
+--- a/machine/m68k.h
++++ b/machine/m68k.h
+@@ -405,6 +405,10 @@
+     void MoveToSR(uint16_t value) {
+         SetSR(value & 0xA71F);
+     }
++    // Arithmetic primitives called by AOT code with already-decoded operands.
++    // These do not fetch or decode an opcode and never call the interpreter.
++    void NativeDivide(unsigned reg, uint16_t source, bool isSigned, uint32_t next, unsigned operandCycles);
++    void NativeCheck(unsigned reg, int16_t bound, uint32_t next, unsigned operandCycles);
+     // For rewrites (runtime/lift.h): the game's code run on the spot, to the return of the routine the PC is
+     // at (by the interpreter alone, hooks left out), or of the routine at `address` (as the game is run)
+     // The registers kept and put back (for C++ that borrows the CPU to run a routine of the game's)
+--- a/machine/machine.cpp
++++ b/machine/machine.cpp
+@@ -240,7 +240,7 @@
+             video.LatchObjectsCps1();
+             if (nativeVideo.Active()) {
+                 nativeVideo.frame = frame;
+-                nativeVideo.BoardObjectsCps1(native_video::DecodeObjectsCps1(videoRam.data(), cpsA), video.Options());
++                nativeVideo.BoardObjectsCps1(native_video::DecodeObjectsCps1(videoRam.data(), cpsA, video.wide.linearObjects), video.Options());
+             }
+         } else {
+             video.LatchObjects(&objectRam[m_objectBank ? 0x2000 : 0], m_extra ? objectsFromExtra[m_objectBank ? 1 : 0] : nullptr);
+--- a/port/frontend_sdl.cpp
++++ b/port/frontend_sdl.cpp
+@@ -383,6 +383,7 @@
+     uint32_t menuWidth = 0, menuHeight = 0;
+     bool menuDirty = false;
+     uint16_t previousPad = 0, heldAtClose = 0;
++    unsigned previousStarts = 0;
+     recomp::MenuRepeat menuRepeat; // (the arrows held go on through the rows and the choices)
+     int triggerHeld = 0;
+     bool bothHeld = false; // a gamepad's Start and Select (Back) together: the menu
+@@ -676,10 +677,45 @@
+             }
+             uint16_t pressed = all & ~previousPad;
+             previousPad = all;
++            unsigned starts = 0;
++            for (int player = 0; player < Machine::kMaxPlayers; ++player) {
++                if (pads[player] & kStart) starts |= 1u << player;
++            }
++            const unsigned newStarts = starts & ~previousStarts;
++            previousStarts = starts;
++            bool pauseStart = false;
++            // Only participating players use Start for pause. Start still
++            // reaches the original title, character selection and continue,
++            // and an inactive second/third player can join normally.
++            if (!both && !port.net && TheGame().startPauseFeature && newStarts) {
++                if (port.menu.IsCheatPause()) {
++                    port.menu.Close();
++                    pauseStart = true;
++                } else if (!port.menu.IsOpen()) {
++                    for (int player = 0; player < Machine::kMaxPlayers; ++player) {
++                        if (!(newStarts & (1u << player))) continue;
++                        if (const char *feature = TheGame().startPauseFeature(player)) {
++                            port.MenuPicture(menuBase, menuWidth, menuHeight);
++                            port.menu.OpenCheatPause(feature);
++                            menuDirty = pauseStart = true;
++                            break;
++                        }
++                    }
++                }
++                if (pauseStart) {
++                    pressed = 0;
++                    heldAtClose = previousPad;
++                }
++            }
+             // Start and Select held together open and close the menu, whatever they are bound to (the second
+             // of them to go down is not also a press in the menu; neither reaches the game until let go)
+             if (both && !bothHeld) {
+-                toggleMenu();
++                if (port.menu.IsCheatPause()) {
++                    port.menu.Open(true);
++                    menuDirty = true;
++                } else {
++                    toggleMenu();
++                }
+                 pressed = 0;
+                 heldAtClose = previousPad;
+             }
+@@ -703,7 +739,7 @@
+             }
+             menuNow |= touch.Menu();
+             unsigned menuPressed = menuRepeat.Step(menuNow);
+-            if (both) {
++            if (both || pauseStart) {
+                 menuPressed = 0;
+             }
+             if (port.menu.IsOpen()) {
+@@ -767,19 +803,25 @@
+         // (a vertical game's picture turned upright: as many columns as the board's lines, as many rows as its columns;
+         // the menu stays as it is, over the turned picture in its middle: Port::MenuPicture)
+         const bool turned = Turned();
+-        // (a framed picture, Port::Framed: in the shape of its columns)
+-        const int shapeColumns = port.FramedColumns() ? port.FramedColumns() : port.ShownWidth();
+-        const SDL_FRect where = turned ? FitPicture(width, height, Video::kHeight, port.ShownWidth(), DisplayShape(), DisplayScaling())
+-                                       : FitPicture(width, height, shapeColumns, Video::kHeight, DisplayShape(), DisplayScaling());
+-        const SDL_FRect menuWhere = turned ? FitPicture(width, height, port.ShownWidth(), Video::kHeight, DisplayShape(), DisplayScaling()) : where;
+-        touch.Layout(width, height, where);
+-        int touchWidth = 0, touchHeight = 0;
+-        if (touch.TakePicture(touchPicture, touchWidth, touchHeight)) {
+-            presenter.SetOverlay(touchPicture.empty() ? nullptr : touchPicture.data(), touchWidth, touchHeight);
+-        }
++        auto pictureWhere = [&] {
++            // (a framed picture, Port::Framed: in the shape of its columns)
++            const int shapeColumns = port.FramedColumns() ? port.FramedColumns() : port.ShownWidth();
++            return turned ? FitPicture(width, height, Video::kHeight, port.ShownWidth(), DisplayShape(), DisplayScaling())
++                          : FitPicture(width, height, shapeColumns, Video::kHeight, DisplayShape(), DisplayScaling());
++        };
++        auto layoutTouch = [&](const SDL_FRect &where) {
++            touch.Layout(width, height, where);
++            int touchWidth = 0, touchHeight = 0;
++            if (touch.TakePicture(touchPicture, touchWidth, touchHeight)) {
++                presenter.SetOverlay(touchPicture.empty() ? nullptr : touchPicture.data(), touchWidth, touchHeight);
++            }
++        };
+ 
+         if (port.menu.IsOpen()) {
+             // The game's picture as it was, with the menu over it
++            const SDL_FRect where = pictureWhere();
++            const SDL_FRect menuWhere = turned ? FitPicture(width, height, port.ShownWidth(), Video::kHeight, DisplayShape(), DisplayScaling()) : where;
++            layoutTouch(where);
+             if (menuDirty) {
+                 menuDirty = false;
+                 menuPicture = menuBase;
+@@ -796,6 +838,10 @@
+         const auto rate = port.menu.GameRate();
+         const double pace = port.paused ? 1.0 : static_cast<double>(rate.frames) / rate.ticks;
+         const bool ran = port.Tick();
++        // Tick can change the picture's width (including 384 -> 512 on the first frame).
++        // Fit the picture being drawn, rather than the previous frame's dimensions.
++        const SDL_FRect where = pictureWhere();
++        layoutTouch(where);
+ 
+         if (audio && silent != (port.menu.muted || audioLog)) {
+             silent = port.menu.muted || audioLog;
+--- a/port/gpu_picture.cpp
++++ b/port/gpu_picture.cpp
+@@ -439,8 +439,13 @@
+             continue; // (the game's sources hide it: PictureOptions::hideObject)
+         }
+         const size_t n = drawnTiles++;
+-        tileWords[n * 4] = static_cast<uint32_t>(static_cast<uint16_t>(t.x)) | (static_cast<uint32_t>(static_cast<uint16_t>(t.y)) << 16);
+-        tileWords[n * 4 + 1] = static_cast<uint16_t>(t.shift); // (where the game's sources move it: PictureOptions::object)
++        // The CPS-1 shader receives unsigned X. Represent a negative native
++        // coordinate through its signed shift, keeping the same screen X.
++        const bool negativeNativeX = raster.Cps1() && frame.options.linearObjects && t.x < 0;
++        const int tileX = negativeNativeX ? 0 : t.x;
++        const int tileShift = negativeNativeX ? t.shift - t.x : t.shift;
++        tileWords[n * 4] = static_cast<uint32_t>(static_cast<uint16_t>(tileX)) | (static_cast<uint32_t>(static_cast<uint16_t>(t.y)) << 16);
++        tileWords[n * 4 + 1] = static_cast<uint16_t>(tileShift); // (where the game's sources move it: PictureOptions::object)
+         tileWords[n * 4 + 2] = t.tile;
+         tileWords[n * 4 + 3] = t.colour | (t.flipX ? 1u << 16 : 0) | (t.flipY ? 1u << 17 : 0) | (t.extra ? 1u << 18 : 0) |
+                                (t.relative ? 1u << 19 : 0) | (static_cast<uint32_t>(t.level) << 20) |
+--- a/port/main.cpp
++++ b/port/main.cpp
+@@ -3015,7 +3015,11 @@
+         const size_t first = opt.menuTest.find(':'), second = opt.menuTest.find(':', first + 1);
+         const std::string keys =
+             opt.menuTest.substr(first + 1, second == std::string::npos ? std::string::npos : second - first - 1);
+-        menu.Open(true);
++        // A leading p exercises the same compact menu offered by Start.
++        const char *pauseFeature = !keys.empty() && keys.front() == 'p' && TheGame().startPauseFeature
++                                       ? TheGame().startPauseFeature(0) : nullptr;
++        if (pauseFeature) menu.OpenCheatPause(pauseFeature);
++        else menu.Open(true);
+         for (const char key : keys) {
+             MenuAct(menu.Buttons(key == 'u' ? kUp : key == 'd' ? kDown : key == 'l' ? kLeft : key == 'r' ? kRight : key == 'a' ? kPunch1 : 0));
+         }
+--- a/port/menu.cpp
++++ b/port/menu.cpp
+@@ -34,6 +34,7 @@
+ } // namespace
+ 
+ void Menu::Open(bool withStates) {
++    m_pause.Close();
+     const cps2recomp::Game &game = cps2recomp::TheGame();
+     recomp::MenuConfig config;
+     // Online, Display, Game and Stage first (issue #196), then the game's pages that belong at the head; then three groups
+@@ -172,6 +173,44 @@
+     m_menu.Open();
+ }
+ 
++void Menu::OpenCheatPause(const char *featureName) {
++    const auto &features = cps2recomp::TheGame().features;
++    const auto found = std::find_if(features.begin(), features.end(), [featureName](const cps2recomp::Feature &f) {
++        return featureName && !strcmp(f.name, featureName);
++    });
++    if (found == features.end()) return;
++    std::vector<std::string> names = {found->name};
++    recomp::MenuConfig config;
++    config.rootTitle = "Paused";
++    config.resumeTitle = "Resume";
++    config.backTitle = "Back";
++    config.resumeDescription = "Return to the game.";
++    config.backDescription = "Return to the pause menu.";
++    config.instructions = "D-pad: choose   A: select   B: back   Start: resume";
++    config.groups = {{{recomp::MenuRow::Page, 0, "Cheats"}}, {{recomp::MenuRow::Resume}}};
++    config.pages.push_back({"Cheats", "", "Enable or disable gameplay cheats.", false});
++    config.features.push_back({"Cheats", found->title, found->description,
++                               {found->choices.begin(), found->choices.end()}});
++    // Keep the compact game menu focused on the requested ammo/health pair.
++    // The complete port menu retains the other developer/game options.
++    if (names.front() == "infinite_ammo") {
++        const auto health = std::find_if(features.begin(), features.end(), [](const cps2recomp::Feature &f) {
++            return !strcmp(f.name, "infinite_health");
++        });
++        if (health != features.end()) {
++            names.push_back(health->name);
++            config.features.push_back({"Cheats", health->title, health->description,
++                                       {health->choices.begin(), health->choices.end()}});
++        }
++    }
++    config.value = [names](size_t i) { return cps2recomp::FeatureSetting(names.at(i).c_str()); };
++    config.setValue = [names](size_t i, int value) { cps2recomp::SetFeatureValue(names.at(i).c_str(), value); };
++    m_menu.Close();
++    m_pause = recomp::Menu{}; // Each Start begins on Cheats, not the previous submenu.
++    m_pause.Configure(std::move(config));
++    m_pause.Open();
++}
++
+ Menu::Menu() {
+     // (so that - and = work before the menu is first opened)
+     recomp::MenuConfig config;
+@@ -219,14 +258,14 @@
+         buttons |= recomp::kMenuConfirm;
+     }
+     // (a press of something else, a coin button say, still takes the note away, as it always did)
+-    if (pressed && !buttons && m_menu.IsOpen()) {
+-        m_menu.Note("");
++    if (pressed && !buttons && IsOpen()) {
++        Note("");
+     }
+     return Press(buttons);
+ }
+ 
+ Menu::Action Menu::Press(unsigned buttons) {
+-    const recomp::Menu::Chosen chosen = m_menu.Buttons(buttons);
++    const recomp::Menu::Chosen chosen = (m_pause.IsOpen() ? m_pause : m_menu).Buttons(buttons);
+     switch (chosen.kind) {
+     case recomp::Menu::Chosen::Save: return Action::Save;
+     case recomp::Menu::Chosen::Load: return Action::Load;
+--- a/port/menu.h
++++ b/port/menu.h
+@@ -26,11 +26,14 @@
+     Menu();
+     // withStates: show the save state rows
+     void Open(bool withStates);
++    void OpenCheatPause(const char *feature);
++    bool IsCheatPause() const { return m_pause.IsOpen(); }
+     void Close() {
+         m_menu.Close();
++        m_pause.Close();
+     }
+     bool IsOpen() const {
+-        return m_menu.IsOpen();
++        return m_menu.IsOpen() || m_pause.IsOpen();
+     }
+     // Buttons newly pressed (cps2recomp::Button bits): Up/Down choose, any punch, kick or Start changes or
+     // goes into a page, Left/Right change a row with several values.
+@@ -71,17 +74,18 @@
+     void SetFullSpeed();
+     // A line to tell the player (why not, say), until the next press
+     void Note(const std::string &text) {
+-        m_menu.Note(text);
++        (m_pause.IsOpen() ? m_pause : m_menu).Note(text);
+     }
+     // Over a picture of 32-bit pixels (red in the low byte)
+     void Draw(uint32_t *pixels, int width, int height) const {
+-        m_menu.Draw(pixels, width, height);
++        (m_pause.IsOpen() ? m_pause : m_menu).Draw(pixels, width, height);
+     }
+ 
+ private:
+     static void Speeds(recomp::MenuConfig &config);
+ 
+     recomp::Menu m_menu;
++    recomp::Menu m_pause;
+     size_t m_command = 0;
+ };
+ 
+--- a/recomp-common/menu.cpp
++++ b/recomp-common/menu.cpp
+@@ -353,8 +353,8 @@
+     float d = 1, pad = 0, panelWidth = 0, inner = 0;
+     // A row's words: its title, its value (and the value's colour) and its description
+     const auto Describe = [&](const Row &row, std::string &title, std::string &value, Color &valueColor, std::string &rowDescription) {
+-        title = Tr("Resume");
+-        rowDescription = Tr("Back to the game.");
++        title = Tr(m_config.resumeTitle);
++        rowDescription = Tr(m_config.resumeDescription);
+         switch (row.kind) {
+         case kRowSave:
+             title = Tr("Save state");
+@@ -416,8 +416,8 @@
+             break;
+         }
+         case kRowBack:
+-            title = Tr("Back");
+-            rowDescription = Parent(m_page).empty() ? Tr("To the first page (Left does the same).")
++            title = Tr(m_config.backTitle);
++            rowDescription = !m_config.backDescription.empty() ? Tr(m_config.backDescription) : Parent(m_page).empty() ? Tr("To the first page (Left does the same).")
+                                                     : i18n::TrFormat("To the {} page (Left does the same).", {Tr(Parent(m_page))});
+             break;
+         case kRowFeature: {
+@@ -487,8 +487,8 @@
+         inner = panelWidth - 2 * pad;
+     }
+     // (the hint is one line unless the picture is a narrow one)
+-    const std::string hint =
+-        i18n::TrFormat("Up/Down: choose   Left/Right or {}: change   {}: close", {Tr(m_config.confirmName), Tr(m_config.closeName)});
++    const std::string hint = m_config.instructions.empty() ?
++        i18n::TrFormat("Up/Down: choose   Left/Right or {}: change   {}: close", {Tr(m_config.confirmName), Tr(m_config.closeName)}) : m_config.instructions;
+     const std::string note = Tr(m_note);
+     const int hintLines = TextLines(hint.c_str(), d, inner);
+     // (rows closer together when there are many; and when even that does not fit, the rows about the chosen
+@@ -517,7 +517,7 @@
+ 
+     const float x = px + pad;
+     float y = py + pad;
+-    canvas.Text(x, y, 2 * d, 0, white, Tr(m_page.empty() ? "Menu" : m_page.c_str()));
++    canvas.Text(x, y, 2 * d, 0, white, Tr((m_page.empty() ? m_config.rootTitle : m_page).c_str()));
+     if (shown < m_rows.size()) {
+         const std::string place = i18n::TrFormat("{} of {}", {std::to_string(m_selected + 1), std::to_string(m_rows.size())});
+         canvas.Text(x + inner - TextWidth(place.c_str(), d), y + 4 * d, d, 0, dim, place.c_str());
+--- a/recomp-common/menu.h
++++ b/recomp-common/menu.h
+@@ -84,6 +84,9 @@
+ };
+ 
+ struct MenuConfig {
++    std::string rootTitle = "Menu", resumeTitle = "Resume", backTitle = "Back";
++    std::string resumeDescription = "Back to the game.", backDescription;
++    std::string instructions;
+     // The first page, in groups; a line is drawn between groups.
+     std::vector<std::vector<MenuRow>> groups;
+     std::vector<MenuFeature> features;
+--- a/runtime/game.h
++++ b/runtime/game.h
+@@ -88,6 +88,10 @@
+ };
+ 
+ struct Game {
++    // A player's Start opens a paused cheat menu during active play. Return
++    // its feature name, or nullptr when Start should reach the arcade game
++    // (title, joining, selection, continue). Games opt in explicitly.
++    const char *(*startPauseFeature)(int player) = nullptr;
+     std::vector<Feature> features;
+     std::vector<Command> commands;
+     std::vector<Page> pages;
+--- a/runtime/no_z80_blocks.cpp
++++ b/runtime/no_z80_blocks.cpp
+@@ -1,9 +1,15 @@
+ // SPDX-License-Identifier: GPL-3.0-only
+ // Copyright (C) 2026 Tommy McLeroy. Part of cps2recomp.
+ //
+-// The build without a translated sound driver: it runs in the Z80 interpreter.
++// The build without a translated sound driver. Native-only builds can dump the
++// supplied ROM before translation, but must refuse execution without AOT code.
+ #include "native_z80.h"
+ 
+ namespace cps2recomp {
+ const Z80Code kZ80Code = {nullptr, 0, nullptr, 0};
++#ifdef DINO_NATIVE_ONLY
++bool RunNativeAfterEI(Z80 &) {
++    return false;
++}
++#endif
+ } // namespace cps2recomp
+--- a/runtime/recomp.cpp
++++ b/runtime/recomp.cpp
+@@ -379,8 +379,12 @@
+ void Call(M68K &c, uint32_t address) {
+     // (the game's own code: its writes are its instructions', which watches tell, not the rewrite's)
+     const int kept = c.nativeWrites;
++    const uint32_t caller = c.pc;
+     c.nativeWrites = 0;
+     c.CallGuest(address);
++    // CallGuest returns to its synthetic sentinel. A notification hook returning false must resume
++    // its caller's instruction, including when that caller is the reference interpreter.
++    c.pc = caller;
+     c.nativeWrites = kept;
+ }
+ 
+@@ -707,7 +711,12 @@
+             depth = 0;
+             bus.BeginCheck();
+             check::side = true;
++            // The hook above may have consumed the frame budget. Compare one whole block on
++            // both sides anyway; the check build's GOTO/FALL macros end that block themselves.
++            const uint64_t keptBudget = budget;
++            budget = ~0ull;
+             fn(*this);
++            budget = keptBudget;
+             check::side = false;
+             bus.EndCheck();
+             native = save();
+--- a/runtime/recomp_z80.cpp
++++ b/runtime/recomp_z80.cpp
+@@ -14,6 +14,10 @@
+ 
+ namespace cps2recomp {
+ 
++#ifdef DINO_NATIVE_ONLY
++bool RunNativeAfterEI(Z80 &c); // generated from the actual sound program
++#endif
++
+ namespace {
+     struct Tables {
+         Z80Fn fn[0x10000] = {};
+@@ -75,6 +79,14 @@
+             // The instruction after EI is done before an interrupt can be taken (always by the interpreter,
+             // so that this is the same however the rest is run)
+             m_afterEI = false;
++#ifdef DINO_NATIVE_ONLY
++            if (!RunNativeAfterEI(*this)) {
++                fprintf(stderr, "native-only: no AOT translation after EI at %04X\n", pc);
++                exit(6);
++            }
++            Record(pc);
++            continue;
++#endif
+             m_cycles = 0;
+             m_jumped = false;
+             refresh++;
+--- a/sound/z80.cpp
++++ b/sound/z80.cpp
+@@ -439,6 +439,10 @@
+ }
+ 
+ void Z80::Execute(uint8_t op, unsigned prefix) {
++#ifdef DINO_NATIVE_ONLY
++    fprintf(stderr, "native-only: untranslated Z80 instruction near %04X (opcode %02X); execution stopped, no interpreter used\n", pc - 1, op);
++    exit(6);
++#else
+     m_cycles += kCycles[op];
+     const unsigned x = op >> 6, y = (op >> 3) & 7, z = op & 7;
+ 
+@@ -659,8 +663,10 @@
+         pc = static_cast<uint16_t>(y * 8);
+         return;
+     }
+-}
+-
++#endif
++}
++
++#ifndef DINO_NATIVE_ONLY
+ void Z80::ExecuteCB(unsigned prefix) {
+     // With an index prefix the displacement comes before the operation, and the operand is always memory
+     uint16_t address = 0;
+@@ -814,6 +820,8 @@
+     // (anything else does nothing)
+ }
+ 
++#endif
++
+ void Z80::Serialize(Archive &ar) {
+     ar.Mark(0x5A383020);
+     ar.Pod(r);
+--- a/tools/recomp.py
++++ b/tools/recomp.py
+@@ -213,6 +213,32 @@
+     if op == 0x46FC:  # move #value,sr
+         value = (mem[insn.addr + 2] << 8) | mem[insn.addr + 3]
+         return ["c.pc = 0x%Xu;" % nxt, "c.MoveToSR(0x%04X);" % value, "c.cycles += 16;"]
++    if op == 0x44FC:  # move #value,ccr
++        value = (mem[insn.addr + 2] << 8) | mem[insn.addr + 3]
++        return ["c.SetSR((c.SR() & 0xFF00) | 0x%Xu);" % (value & 0x1F),
++                "c.pc = 0x%Xu;" % nxt, "c.cycles += 16;"]
++    if op == 0x4E70:  # RESET: the board has no additional reset side effect
++        return ["c.pc = 0x%Xu;" % nxt, "c.cycles += 132;"]
++    if op in (0x007C, 0x027C, 0x0A7C):  # ORI/ANDI/EORI to SR
++        value = (mem[insn.addr + 2] << 8) | mem[insn.addr + 3]
++        operator = {0x007C: "|", 0x027C: "&", 0x0A7C: "^"}[op]
++        return ["c.SetSR((c.SR() %s 0x%Xu) & 0xA71F);" % (operator, value),
++                "c.pc = 0x%Xu;" % nxt, "c.cycles += 20;"]
++    if op & 0xF0C0 == 0x80C0:  # DIVU/DIVS: emitted operands, native arithmetic
++        dec = m68k.Decoder(mem, insn.addr)
++        ea = dec.ea((op >> 3) & 7, op & 7, 1)
++        return ["{"] + ea.pre + [
++            "const uint16_t divisor = static_cast<uint16_t>(%s);" % ea.load(),
++            "c.NativeDivide(%d, divisor, %s, 0x%Xu, %d);" %
++            ((op >> 9) & 7, "true" if op & 0x100 else "false", nxt,
++             m68k.OPERAND_CYCLES[0][ea.index]), "}"]
++    if op & 0xF1C0 == 0x4180:  # CHK
++        dec = m68k.Decoder(mem, insn.addr)
++        ea = dec.ea((op >> 3) & 7, op & 7, 1)
++        return ["{"] + ea.pre + [
++            "const int16_t bound = static_cast<int16_t>(%s);" % ea.load(),
++            "c.NativeCheck(%d, bound, 0x%Xu, %d);" %
++            ((op >> 9) & 7, nxt, m68k.OPERAND_CYCLES[0][ea.index]), "}"]
+     return None
+ 
+ def emit_routine(out, head, members, blocks, mem, hooks=(), watches=()):
+@@ -263,8 +289,11 @@
+                 direct = directly(insn, mem, nxt)
+                 if direct:
+                     out.extend("    " + line for line in direct)
+-                    if insn.length == 2:  # (a trap or rte: the refetch where it goes, as the interpreter has it, M68K::RefillWait)
++                    op = (mem[insn.addr] << 8) | mem[insn.addr + 1]
++                    if op == 0x4E73 or op & 0xFFF0 == 0x4E40:  # exception target refetch only
+                         out.append("    c.cycles += c.busWait;")
++                    elif insn.length == 2:  # DIV/CHK refetch only if an exception was taken
++                        out.append("    if (c.pc != 0x%Xu) c.cycles += c.busWait;" % nxt)
+                 else:
+                     out.append("    c.Interpret(0x%Xu);" % insn.addr)
+                 if insn.flow in ("stop", "end"):
+--- a/tools/recompz80.py
++++ b/tools/recompz80.py
+@@ -291,6 +291,28 @@
+     table += ["};", "", "const Z80Code kZ80Code = {kEntries, sizeof(kEntries) / sizeof(kEntries[0]), kRanges,",
+               "                            sizeof(kRanges) / sizeof(kRanges[0])};", "", "} // namespace cps2recomp"]
+     write("z80_table.cpp", "\n".join(table) + "\n")
++    # EI delays interrupts for exactly one instruction. Emit those successors
++    # separately so native execution never invokes the interpreter for them.
++    after_ei = sorted({i.addr + i.length for i in insns.values() if i.text == "ei"})
++    single = ['// AOT EI successors, generated from the supplied sound ROM.',
++              '#include "native_z80.h"', 'namespace cps2recomp {',
++              'bool RunNativeAfterEI(Z80 &c) {', 'switch (c.pc) {']
++    for at in after_ei:
++        i = z80.decode(mem, at, ops)
++        if i.interp or i.flow not in ('next', 'return', 'jump', 'branch'):
++            raise ValueError('EI successor needs a native emitter at %04X: %s' % (at, i.text))
++        single += ['case 0x%04X: {' % at, 'c.refresh += %d;' % i.refresh]
++        single += i.lines
++        single += ['c.cycles += %d;' % i.cycles]
++        if i.flow in ('return', 'jump'):
++            single += ['c.pc = to;']
++        elif i.flow == 'branch':
++            single += ['c.pc = 0x%04X;' % i.target]
++        else:
++            single += ['c.pc = 0x%04X;' % (at+i.length)]
++        single += ['return true;', '}']
++    single += ['default: return false;', '}', '}', '}']
++    write('z80_after_ei.cpp', '\n'.join(single) + '\n')
+     for name in os.listdir(args.out):
+         if name.startswith("z80_") and name not in written:
+             os.remove(os.path.join(args.out, name))
+--- a/video/native.cpp
++++ b/video/native.cpp
+@@ -104,10 +104,10 @@
+         return layers;
+     }
+ 
+-    ObjectList DecodeObjectsCps1(const uint8_t *videoRam, const uint16_t *cpsA) {
++    ObjectList DecodeObjectsCps1(const uint8_t *videoRam, const uint16_t *cpsA, bool expanded) {
+         ObjectList list;
+         const uint32_t base = (static_cast<uint32_t>(cpsA[0]) * 256) & ~0x7FFu & 0x3FFFF;
+-        for (int n = 0; n < 0x400 && base + n * 2 + 1 < 0x30000; n++) {
++        for (int n = 0; n < (expanded ? kObjectWords : 0x400) && base + n * 2 + 1 < 0x30000; n++) {
+             list.words[n] = Word(&videoRam[base + n * 2]);
+         }
+         return list;
+@@ -261,7 +261,7 @@
+         return;
+     }
+     // (the game's list: in video RAM where the game said, as the board takes it)
+-    const native_video::ObjectList mine = native_video::DecodeObjectsCps1(videoRam, m_cpsA);
++    const native_video::ObjectList mine = native_video::DecodeObjectsCps1(videoRam, m_cpsA, options.linearObjects);
+     m_raster.Objects(mine, options);
+     m_bank = 0; // (a list given: a CPS-1 has no bank to name)
+     if (!checking) {
+--- a/video/native_render.cpp
++++ b/video/native_render.cpp
+@@ -58,7 +58,7 @@
+     uint16_t words[kObjectWords];
+     memcpy(words, list.words, sizeof(words));
+     // (the list ends at the first entry marked so: on a CPS-1, 256 entries, its attributes' high byte FF)
+-    const int size = m_cps1 ? 0x400 : kObjectWords;
++    const int size = m_cps1 && !options.linearObjects ? 0x400 : kObjectWords;
+     int last = size - 4;
+     for (int n = 0; n < size; n += 4) {
+         if (m_cps1 ? (words[n + 3] & 0xFF00) == 0xFF00 : (words[n + 1] >= 0x8000 || words[n + 3] >= 0xFF00)) {
+@@ -82,7 +82,9 @@
+             for (int ty = 0; ty < down; ty++) {
+                 for (int tx = 0; tx < across; tx++) {
+                     ObjectTile t;
+-                    t.x = static_cast<int16_t>((x + tx * 16) & 0x1FF);
++                    t.x = options.linearObjects
++                        ? static_cast<int16_t>(static_cast<int16_t>(x) + tx * 16)
++                        : static_cast<int16_t>((x + tx * 16) & 0x1FF);
+                     t.y = static_cast<int16_t>((y + ty * 16) & 0x1FF);
+                     const int cx = flipX ? across - 1 - tx : tx, cy = flipY ? down - 1 - ty : ty;
+                     t.tile = (code & ~0xFu) + ((code + cx) & 0xF) + 0x10 * cy;
+--- a/video/records.h
++++ b/video/records.h
+@@ -66,6 +66,7 @@
+         int (*object)(uint32_t tile, uint16_t attributes, int entry) = nullptr;
+         bool (*tile)(int which, int column, int row, int at, uint16_t &code, uint16_t &attributes) = nullptr;
+         bool fillHoles = false;
++        bool linearObjects = false;
+         bool (*hideObject)(uint32_t tile, uint16_t attributes) = nullptr;
+         void (*objectsTaken)(uint16_t *list, int &last) = nullptr;
+         bool markObjects = false;
+@@ -87,7 +88,7 @@
+                         const uint8_t *masks = nullptr);
+     // A CPS-1's object list: 256 entries in video RAM where CPS-A's first register says (Video::LatchObjectsCps1); the
+     // rest of the record's words 0
+-    ObjectList DecodeObjectsCps1(const uint8_t *videoRam, const uint16_t *cpsA);
++    ObjectList DecodeObjectsCps1(const uint8_t *videoRam, const uint16_t *cpsA, bool expanded = false);
+ 
+     // The game's side: a buffer of colours in video RAM as the game left it
+     // (`pages` and the buffer's place as the game's code works them out)
+--- a/video/video.cpp
++++ b/video/video.cpp
+@@ -297,12 +297,13 @@
+     m_priorityControl = 0;
+     const uint32_t base = (static_cast<uint32_t>(m_src.cpsA[0]) * 256) & ~0x7FFu & 0x3FFFF;
+     std::fill(std::begin(m_objects), std::end(m_objects), 0);
+-    for (int n = 0; n < 0x400 && base + n * 2 + 1 < 0x30000; n++) {
++    const int count = wide.linearObjects ? 0x1000 : 0x400;
++    for (int n = 0; n < count && base + n * 2 + 1 < 0x30000; n++) {
+         m_objects[n] = Word(&m_src.videoRam[base + n * 2]);
+     }
+     // The list ends at the first entry whose attributes' high byte is FF
+-    m_lastObject = 0x400 - 4;
+-    for (int n = 0; n < 0x400; n += 4) {
++    m_lastObject = count - 4;
++    for (int n = 0; n < count; n += 4) {
+         if ((m_objects[n + 3] & 0xFF00) == 0xFF00) {
+             m_lastObject = n - 4;
+             break;
+@@ -338,7 +339,9 @@
+             }
+             const int line = rasterLine - sy;
+             for (int tx = 0; tx < across; tx++) {
+-                const int sx = ((x + tx * 16) & 0x1FF) + shift;
++                const int tileX = wide.linearObjects ? static_cast<int16_t>(x) + tx * 16
++                                                     : ((x + tx * 16) & 0x1FF);
++                const int sx = tileX + shift;
+                 if (sx <= -16 || sx >= width) {
+                     continue;
+                 }
+--- a/video/video.h
++++ b/video/video.h
+@@ -133,6 +133,10 @@
+         // the backdrop shows, in the added columns or where a scroll screen is drawn moved: with this set, a
+         // run of such pixels no wider than `side` is the line's own picture mirrored at the nearest drawn pixel)
+         bool fillHoles = false;
++        // A native widescreen layout can emit signed X coordinates past the
++        // CPS-1 raster's 9-bit boundary. Preserve them rather than wrapping
++        // each 16px piece to the opposite edge. Opt-in; board default wraps.
++        bool linearObjects = false;
+     } wide;
+     int Width() const {
+         return kWidth + 2 * wide.side;
+@@ -148,6 +152,7 @@
+         o.object = wide.object;
+         o.tile = wide.tile;
+         o.fillHoles = wide.fillHoles;
++        o.linearObjects = wide.linearObjects;
+         o.hideObject = hideObject;
+         o.objectsTaken = objectsTaken;
+         o.markObjects = markObjects;
+--- a/games/dino/src/cheats.cpp
++++ b/games/dino/src/cheats.cpp
+@@ -0,0 +1,105 @@
++// SPDX-License-Identifier: GPL-3.0-only
++#include "dino.h"
++
++#include <cstdio>
++#include <cstdlib>
++
++namespace cps2recomp {
++namespace {
++template<unsigned AddressRegister, uint32_t Resume, unsigned Cycles=26>
++bool KeepHealth(M68K &c) {
++    const uint32_t player=c.a[AddressRegister]&0xFFFFFF;
++    if (player!=dino::Player(0) && player!=dino::Player(1) && player!=dino::Player(2)) return false;
++    const unsigned health=Ram16(player+0x6C);
++    if (!Ram8(player) || health==0 || health>dino::kHealthFull) return false;
++    const bool keep=FeatureOn("infinite_health");
++    static const bool check=std::getenv("DINO_HEALTH_CHECK")!=nullptr;
++    static unsigned reports=0;
++    if (check && reports++<300) {
++        const auto &machine=static_cast<Machine &>(c.bus);
++        std::fprintf(stderr,"dino health: frame %llu pc %06X player %06X hp %u d0 %u d1 %u keep %u\n",
++            static_cast<unsigned long long>(machine.frame),c.pc,player,health,c.d[0]&0xFFFF,c.d[1]&0xFFFF,keep);
++    }
++    if (!keep) return false;
++    // Stop the health subtraction before its lethal branch, retaining the
++    // original hit reaction, knockback, weapon drops and special-move logic.
++    // The caller's damage registers still serve its later effects/scoring.
++    c.Sub(health,0,1,false,false);
++    c.pc=Resume;
++    c.cycles+=Cycles;
++    return true;
++}
++
++template<uint32_t Resume>
++bool KeepAmmunition(M68K &c) {
++    const uint32_t weapon=c.a[6]&0xFFFFFF;
++    if (weapon<0xFF0000 || weapon>0xFFFF4F) return false;
++    const uint32_t player=0xFF0000|Ram16(weapon+0x70);
++    if (player!=dino::Player(0) && player!=dino::Player(1) && player!=dino::Player(2)) return false;
++    if (!Ram8(player) || Ram16(player+0xB4)!=(weapon&0xFFFF) ||
++        Ram16(player+0xB6)!=Ram16(weapon+0xA0)) return false;
++    const unsigned ammo=Ram16(weapon+0x6C);
++    const bool keep=FeatureOn("infinite_ammo") && ammo>0;
++    static const bool check=std::getenv("DINO_AMMO_CHECK")!=nullptr;
++    static unsigned reports=0;
++    if (check && reports++<300) {
++        const auto &machine=static_cast<Machine &>(c.bus);
++        std::fprintf(stderr,"dino ammo: frame %llu pc %06X player %06X weapon %06X type %04X ammo %u keep %u\n",
++            static_cast<unsigned long long>(machine.frame),c.pc,player,weapon,
++            Ram16(weapon+0xA0),ammo,keep);
++    }
++    if (!keep) return false;
++    // Replace SUBQ.W #1,6C(A6) with subtract-zero, then take the original
++    // nonempty branch. This also preserves a gun with its last round; it
++    // never creates ammunition or changes another object's health/durability.
++    c.Sub(ammo,0,1,false,false);
++    c.pc=Resume;
++    c.cycles+=26; // original memory SUBQ (16) and taken BNE (10)
++    return true;
++}
++} // namespace
++
++void RegisterDinoCheats() {
++    TheGame().features.push_back({"infinite_ammo","Cheats","Infinite Ammo",
++        "Firing does not consume ammunition for any player.",0,{"No","Yes"}});
++    // Native collision damage, special-move health costs, and grab damage.
++    AddHook(0x010788,"InfiniteHealth010788",KeepHealth<3,0x010796>);
++    AddHook(0x010A5E,"InfiniteHealth010A5E",KeepHealth<3,0x010A6A>);
++    AddHook(0x010B1E,"InfiniteHealth010B1E",KeepHealth<2,0x010B2C>);
++    AddHook(0x010D92,"InfiniteHealth010D92",KeepHealth<3,0x010D9E>);
++    AddHook(0x010EFE,"InfiniteHealth010EFE",KeepHealth<3,0x010F1C>);
++    AddHook(0x010F10,"InfiniteHealth010F10",KeepHealth<3,0x010F1C>);
++    AddHook(0x0110DE,"InfiniteHealth0110DE",KeepHealth<3,0x0110EA>);
++    AddHook(0x0111D6,"InfiniteHealth0111D6",KeepHealth<3,0x0111E4>);
++    AddHook(0x01142A,"InfiniteHealth01142A",KeepHealth<3,0x011436>);
++    AddHook(0x01150C,"InfiniteHealth01150C",KeepHealth<3,0x01151A>);
++    AddHook(0x0116D2,"InfiniteHealth0116D2",KeepHealth<3,0x0116DE>);
++    AddHook(0x011806,"InfiniteHealth011806",KeepHealth<3,0x011812>);
++    AddHook(0x011912,"InfiniteHealth011912",KeepHealth<3,0x01191E>);
++    AddHook(0x011A44,"InfiniteHealth011A44",KeepHealth<3,0x011A50>);
++    AddHook(0x011BCA,"InfiniteHealth011BCA",KeepHealth<3,0x011BD6>);
++    AddHook(0x011C96,"InfiniteHealth011C96",KeepHealth<2,0x011CA4>);
++    AddHook(0x011DEA,"InfiniteHealth011DEA",KeepHealth<3,0x011DF6>);
++    AddHook(0x011F20,"InfiniteHealth011F20",KeepHealth<3,0x011F3A>);
++    AddHook(0x011FF8,"InfiniteHealth011FF8",KeepHealth<3,0x012004>);
++    AddHook(0x0121A4,"InfiniteHealth0121A4",KeepHealth<3,0x0121B0>);
++    AddHook(0x01227A,"InfiniteHealth01227A",KeepHealth<3,0x012286>);
++    AddHook(0x0123E4,"InfiniteHealth0123E4",KeepHealth<3,0x0123F0>);
++    AddHook(0x0124F6,"InfiniteHealth0124F6",KeepHealth<3,0x012502>);
++    AddHook(0x01256A,"InfiniteHealth01256A",KeepHealth<3,0x01257E>);
++    AddHook(0x01262E,"InfiniteHealth01262E",KeepHealth<3,0x01263A>);
++    AddHook(0x0126D2,"InfiniteHealth0126D2",KeepHealth<3,0x0126EC>);
++    AddHook(0x018ED6,"InfiniteHealth018ED6",KeepHealth<6,0x018EE2>);
++    AddHook(0x03A102,"InfiniteHealthGrab",KeepHealth<0,0x03A106,16>);
++    AddHook(0x03A106,"HealthGrabResume",[](M68K &) { return false; });
++    // ROM dispatch 0251C8: equipped weapon variants 0,2,6,8,A,C.
++    // Their types are 0205,0204,0206,0207,0208,0209 respectively.
++    // Variant 4 and the later variants are thrown/melee weapons, not guns.
++    AddHook(0x025212,"InfiniteAmmoRifle",KeepAmmunition<0x025238>);
++    AddHook(0x0252FE,"InfiniteAmmoGun",KeepAmmunition<0x02531E>);
++    AddHook(0x02556A,"InfiniteAmmoUzi",KeepAmmunition<0x025590>);
++    AddHook(0x0256D0,"InfiniteAmmoM16",KeepAmmunition<0x0256F6>);
++    AddHook(0x0257DE,"InfiniteAmmoShotgun",KeepAmmunition<0x0257FE>);
++    AddHook(0x025902,"InfiniteAmmoBazooka",KeepAmmunition<0x02590E>);
++}
++} // namespace cps2recomp
+--- a/games/dino/src/ending_wide.cpp
++++ b/games/dino/src/ending_wide.cpp
+@@ -0,0 +1,57 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// Additional native-size scenery bays for the escape scene. The source
++// paints only its 384-column viewport; adjacent VRAM still contains the lab.
++#include "dino.h"
++
++namespace cps2recomp {
++void DinoEndingComicAfterFrame(Machine &);
++namespace {
++int EndingPhase() {
++    if (Ram8(0xFF84D0) != 0x1C) return -1;
++    // 0A6ABA starts object 0148. Its handler 08AA38 dispatches byte +5;
++    // this is the running script state, independent of frame rate or time.
++    for (unsigned n=0; n<24; ++n) {
++        const uint32_t object=0xFFB6F4+n*0xC0;
++        if (Ram8(object) && Ram8(object+4)==2 && Ram16(object+0x20)==0x148)
++            return Ram8(object+5);
++    }
++    return -1;
++}
++void MapTile(Machine &machine, int which, int column, int row,
++             uint16_t &code, uint16_t &attributes) {
++    column &= 63;
++    const uint32_t base=(static_cast<uint32_t>(machine.cpsA[which+1])*256)&0x3C000;
++    const uint32_t index=which==1 ? (row&15)+(column<<4)+((row&48)<<6)
++                                 : (row&7)+(column<<3)+((row&56)<<6);
++    const uint8_t *p=&machine.videoRam[base+index*4];
++    code=static_cast<uint16_t>((p[0]<<8)|p[1]);
++    attributes=static_cast<uint16_t>((p[2]<<8)|p[3]);
++}
++} // namespace
++
++bool DinoEndingTile(Machine &machine, int which, int column, int row, int at,
++                    uint16_t &code, uint16_t &attributes) {
++    if (which==0) { code=0x001F; attributes=0; return true; }
++    const int phase=EndingPhase();
++    if (phase>=8 && phase<=0x12) {
++        // 08ACE8 replaces the outdoor foreground/background only within
++        // the original viewport. Add another 64px bay of their sky, cliff
++        // and floor at each side, using tiles from the same row. Objects
++        // are rendered once at their original position, never duplicated.
++        const int offset=which==1 ? 8 : 4;
++        MapTile(machine,which,column+(at<64 ? offset : -offset),row,code,attributes);
++        return true;
++    }
++    if (phase>=0x14 && phase<=0x18) {
++        // The isolated comic card is composed after rendering. Do not
++        // expose the previous lab's unused tile columns around it.
++        code=which==1 ? 0x5800 : 0x1C00; attributes=0; return true;
++    }
++    return false;
++}
++
++void DinoEndingAfterFrame(Machine &machine) {
++    const int phase=EndingPhase();
++    if (phase==0x14 || phase==0x16) DinoEndingComicAfterFrame(machine);
++}
++} // namespace cps2recomp
+--- a/games/dino/src/movement_wide.cpp
++++ b/games/dino/src/movement_wide.cpp
+@@ -0,0 +1,53 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// Match the player's screen-edge clamp to the native wide viewport. The
++// game's terrain/actor collisions run before this screen-only constraint.
++#include "dino.h"
++
++#include <algorithm>
++#include <cstdio>
++#include <cstdlib>
++
++namespace cps2recomp {
++bool DinoWidePlayerBounds(bool local, int &left, int &right);
++namespace {
++template<bool Local>
++bool WidePlayerX(M68K &c) {
++    const uint32_t player=c.a[6]&0xFFFFFF;
++    if (player!=dino::Player(0) && player!=dino::Player(1) && player!=dino::Player(2)) return false;
++    if (!FeatureOn("widescreen")) return false;
++    static const bool off=std::getenv("DINO_WIDE_MOVEMENT_OFF")!=nullptr;
++    if (off) return false;
++    int left=0, right=0;
++    if (!DinoWidePlayerBounds(Local,left,right)) return false;
++    // Episode 3's final camera segment is X7FF0 (ROM021D0A), so a valid
++    // player can cross 8000. Interpret the 16-bit coordinate near this
++    // viewport, rather than treating every world coordinate as signed.
++    const int reference=left+(right-left)/2;
++    const int x=reference+static_cast<int16_t>(Ram16(player+dino::kX)-reference);
++    const int constrained=std::clamp(x,left,right);
++    if (constrained!=x) SetRam16(player+dino::kX,static_cast<uint16_t>(constrained));
++    // Original SUB.W adjusts only the integer word. Keep subpixel position,
++    // momentum, the camera, scripted wave gates and all Y constraints intact.
++    // The continuation overwrites D0 and arithmetic flags with its Y work.
++    c.pc=Local ? 0x005020 : 0x004FEE;
++    c.cycles+=(Local ? 46 : 58)+(x>=right ? 14 : 0);
++    static const bool check=std::getenv("DINO_WIDE_MOVEMENT_CHECK")!=nullptr;
++    static unsigned reports=0;
++    const int camera=Local ? 0 : Ram16(0xFF8744);
++    if (check && reports<24 && (x<camera+16 || x>camera+368)) {
++        ++reports;
++        const auto &machine=static_cast<Machine &>(c.bus);
++        std::fprintf(stderr,"dino wide movement: frame %llu player %06X local %d x %d result %d bounds %d..%d camera %d\n",
++            static_cast<unsigned long long>(machine.frame),player,Local,x,constrained,left,right,camera);
++    }
++    return true;
++}
++} // namespace
++
++void RegisterDinoMovementWide() {
++    // 018E98 reaches this after 012CAC's floor/wall/object collision work.
++    // Replace just X; resume at the original normal/local Y clamp.
++    AddHook(0x004FD6,"WidePlayerWorldX",WidePlayerX<false>);
++    AddHook(0x00500C,"WidePlayerLocalX",WidePlayerX<true>);
++}
++} // namespace cps2recomp
+--- a/games/dino/src/objects_wide.cpp
++++ b/games/dino/src/objects_wide.cpp
+@@ -0,0 +1,72 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// The original sprite assembler discards individual blocks outside hardware
++// X64..448, before the renderer ever receives them. Extend only that visual
++// culling rectangle; actor simulation, activation and collision stay intact.
++#include "dino.h"
++
++#include <cstdio>
++#include <cstdlib>
++
++namespace cps2recomp {
++namespace {
++template<uint32_t Emit>
++bool WideObjectPiece(M68K &c) {
++    auto &machine=static_cast<Machine &>(c.bus);
++    const auto &wide=machine.video.wide;
++    // The stage renderer installs an object-offset callback. Special cards
++    // do not: their deliberately hidden objects must remain hidden.
++    if (!wide.side || !wide.object || !FeatureOn("widescreen")) return false;
++    static const bool off=std::getenv("DINO_WIDE_OBJECTS_OFF")!=nullptr;
++    if (off) return false;
++    const int x=static_cast<int16_t>(c.d[0]);
++    const uint16_t attributes=static_cast<uint16_t>(c.d[3]);
++    const int width=(((attributes>>8)&15)+1)*16;
++    // Preserve the original code path for every piece it already accepted.
++    // Its inclusive edge comparison also admits completely clipped pieces.
++    if (x<=0x1C0 && (x>0x40 || x+width>=0x40)) return false;
++    const int shift=wide.side-Video::kFirstColumn-wide.object(0,attributes,0);
++    if (x+shift>=machine.video.Width() || x+width+shift<=0) return false;
++
++    static const bool check=std::getenv("DINO_WIDE_OBJECTS_CHECK")!=nullptr;
++    static unsigned reported=0;
++    if (check && reported++<16) {
++        std::fprintf(stderr,"dino wide object: frame %llu pc %06X actor %06X rawX %d width %d screenX %d emit %06X\n",
++            static_cast<unsigned long long>(machine.frame),c.pc,c.a[0]&0xFFFFFF,
++            x,width,x+shift,Emit);
++    }
++    // Both branches resume at the existing native writer. Its subsequent
++    // MOVE/ADD overwrite the flags and scratch registers used by culling;
++    // the block's tile, position, palette, flip and ordering remain original.
++    c.pc=Emit;
++    // Account for the clip decision replaced here. Additional sprite writes
++    // retain their native instruction timing in the existing continuation.
++    c.cycles+=x>0x1C0 ? 18 : 114;
++    return true;
++}
++} // namespace
++
++void RegisterDinoObjectsWide() {
++    // Fixed-palette, per-block-palette, flipped, low-height and direct-data
++    // assemblers. Each hook starts at CMP.W #$1C0,D0, after D0/D3 are ready.
++    AddHook(0x014306,"WideObject14306",WideObjectPiece<0x014338>);
++    AddHook(0x014358,"WideObject14358",WideObjectPiece<0x01438A>);
++    AddHook(0x0143FE,"WideObject143FE",WideObjectPiece<0x014430>);
++    AddHook(0x014450,"WideObject14450",WideObjectPiece<0x014482>);
++    AddHook(0x0144D6,"WideObject144D6",WideObjectPiece<0x014506>);
++    AddHook(0x01452C,"WideObject1452C",WideObjectPiece<0x01455C>);
++    AddHook(0x014592,"WideObject14592",WideObjectPiece<0x0145C2>);
++    AddHook(0x0145FE,"WideObject145FE",WideObjectPiece<0x01462E>);
++    AddHook(0x014696,"WideObject14696",WideObjectPiece<0x0146C6>);
++    AddHook(0x0146EC,"WideObject146EC",WideObjectPiece<0x01471C>);
++    AddHook(0x014752,"WideObject14752",WideObjectPiece<0x014782>);
++    AddHook(0x0147BE,"WideObject147BE",WideObjectPiece<0x0147EE>);
++    AddHook(0x01484A,"WideObject1484A",WideObjectPiece<0x01487A>);
++    AddHook(0x0148A8,"WideObject148A8",WideObjectPiece<0x0148D8>);
++    AddHook(0x014906,"WideObject14906",WideObjectPiece<0x014936>);
++    AddHook(0x014972,"WideObject14972",WideObjectPiece<0x0149A2>);
++    // Ground effects and shadows have the same clipping convention.
++    AddHook(0x014BF4,"WideObject14BF4",WideObjectPiece<0x014C24>);
++    AddHook(0x014C56,"WideObject14C56",WideObjectPiece<0x014C86>);
++    AddHook(0x014F56,"WideObject14F56",WideObjectPiece<0x014F86>);
++}
++} // namespace cps2recomp
+--- a/games/dino/src/opening_wide.cpp
++++ b/games/dino/src/opening_wide.cpp
+@@ -0,0 +1,127 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// Dino's opening: retain the authored art at its original pixel size.
++#include "dino.h"
++
++#include <vector>
++
++namespace cps2recomp {
++namespace {
++uint16_t OpeningWord(uint32_t at) {
++    const uint8_t *p = Program(at);
++    return static_cast<uint16_t>((p[0] << 8) | p[1]);
++}
++
++bool ForestIsPainted(const Machine &machine) {
++    // 09BF50's script event index, incremented before dispatch. Event 8
++    // calls 09C29C, painting the forest. Event 32 fades and clears it.
++    const unsigned event = Ram16(0xFF0FFE);
++    const uint8_t *p = &machine.videoRam[0xF000];
++    return event >= 8 && event <= 32 &&
++           p[0] == 0x58 && p[1] == 0x0F && p[2] == 0x01 && p[3] == 0x82;
++}
++
++void EmptyOpeningTile(int which, uint16_t &code, uint16_t &attributes) {
++    // The exact clear tiles written by 000B52/000B6C/000B88.
++    code = which == 0 ? 0x20 : which == 1 ? 0x5800 : 0x1C00;
++    attributes = which == 0 ? 6 : 0;
++}
++} // namespace
++
++bool DinoOpeningTile(Machine &machine, int which, int column, int row, int,
++                     uint16_t &code, uint16_t &attributes) {
++    EmptyOpeningTile(which, code, attributes);
++    // The narrative text and CAPCOM card have no authored side scenery.
++    // In particular their old scroll maps must not expose a prior demo.
++    if (which == 0 || !ForestIsPainted(machine)) {
++        return true;
++    }
++    uint32_t tile = 0;
++    if (which == 1 && row >= 48) {
++        // 09C29C -> 0204CA: four 256px chunks cover the complete 1024px
++        // scroll-2 map. All 1024 entries match the natural opening dump.
++        static constexpr unsigned chunks[4] = {3, 4, 3, 3};
++        const unsigned cell = static_cast<unsigned>((column & 14) * 4 + ((row & 14) >> 1));
++        const unsigned meta = OpeningWord(0x145DC8 + chunks[column >> 4] * 128 + cell * 2);
++        tile = 0x175378 + meta * 16 + static_cast<unsigned>((column & 1) * 2 + (row & 1)) * 4;
++    } else if (which == 2 && row >= 56) {
++        // 09C308 -> 020592 paints chunk 72 three times. Continue that
++        // explicit 256px repeating tree pattern at the newly exposed edge.
++        tile = 0x177288 + 0x72 * 256 + static_cast<unsigned>((column & 7) * 8 + (row & 7)) * 4;
++    }
++    if (tile) {
++        code = OpeningWord(tile);
++        attributes = OpeningWord(tile + 2);
++    }
++    return true;
++}
++
++void DinoOpeningAfterFrame(Machine &machine) {
++    if (!ForestIsPainted(machine) || machine.PictureWidth() != 512) {
++        return;
++    }
++    // The source movie masks the forest to y=40..183. Replace its matte
++    // with additional 1:1 tree/foliage bands from that same scene. This is
++    // a deliberate extension using existing art, not recovered hidden art.
++    // Only the two forest planes move during this extra render; captions
++    // and characters stay at their original coordinates and keep their
++    // true transparent pixels. No colour-keying or pixel interpolation.
++    const uint16_t scroll2Y = machine.cpsA[9], scroll3Y = machine.cpsA[11];
++    const unsigned layerMask = machine.video.layerMask;
++    // At first the same matte covers the entire movie and opens vertically.
++    // Keeping that aperture in the centre while extending only its border
++    // produces black rectangles surrounded by visible forest. Convert the
++    // authored reveal to one fade of the whole 512-column composition.
++    // Read exact mask tiles, not the displayed colours (which also fade).
++    unsigned covered = 0, cells = 0;
++    const uint32_t map = (static_cast<uint32_t>(machine.cpsA[1]) * 256) & 0x3C000;
++    for (int y = 40; y < 184; y += 8) {
++        const unsigned row = ((machine.cpsA[7] + Video::kFirstLine + y) & 511) >> 3;
++        for (int x = 0; x < 384; x += 8) {
++            const unsigned column = ((machine.cpsA[6] + Video::kFirstColumn + x) & 511) >> 3;
++            const unsigned index = (row & 31) + (column << 5) + ((row & 32) << 6);
++            const uint8_t *p = &machine.videoRam[map + index * 4];
++            covered += p[0] == 0 && p[1] == 0x18 && p[2] == 0 && p[3] == 0;
++            ++cells;
++        }
++    }
++    // Scroll 1 supplies the movie's opaque matte with exact tile 0018.
++    // Remove only those authored mask tiles for this composition; the
++    // caption glyphs remain untouched, including their real transparency.
++    std::vector<uint32_t> matte;
++    for (uint32_t index = 0; index < 4096; ++index) {
++        const uint32_t at = map + index * 4;
++        if (machine.videoRam[at] == 0 && machine.videoRam[at + 1] == 0x18 &&
++            machine.videoRam[at + 2] == 0 && machine.videoRam[at + 3] == 0) {
++            matte.push_back(at);
++            machine.videoRam[at + 1] = 0x1F;
++        }
++    }
++    uint32_t *picture = machine.Picture();
++    for (int y = 0; y < Video::kHeight; ++y) {
++        const bool centre = y >= 40 && y < 184;
++        // Stable movie frames retain their original central pixels exactly.
++        if (centre && !covered) continue;
++        const int delta = centre ? 0 : y < 40 ? 64 : -64;
++        // The movie's actor list includes unused fragments under the matte.
++        // Keep its actors in the original movie, not in the new forest bands.
++        machine.video.layerMask = centre ? layerMask : layerMask & ~1u;
++        machine.cpsA[9] = static_cast<uint16_t>(scroll2Y + delta);
++        machine.cpsA[11] = static_cast<uint16_t>(scroll3Y + delta);
++        machine.video.RenderLine(y, picture + y * machine.PictureWidth());
++    }
++    machine.cpsA[9] = scroll2Y;
++    machine.cpsA[11] = scroll3Y;
++    machine.video.layerMask = layerMask;
++    for (uint32_t at : matte) machine.videoRam[at + 1] = 0x18;
++    if (covered) {
++        const unsigned visible = cells - covered;
++        for (int i = 0; i < machine.PictureWidth() * Video::kHeight; ++i) {
++            const uint32_t pixel = picture[i];
++            uint32_t faded = pixel & 0xFF000000u;
++            for (unsigned shift = 0; shift < 24; shift += 8)
++                faded |= ((((pixel >> shift) & 255) * visible + cells / 2) / cells) << shift;
++            picture[i] = faded;
++        }
++    }
++}
++} // namespace cps2recomp
+--- a/games/dino/src/special_wide.cpp
++++ b/games/dino/src/special_wide.cpp
+@@ -0,0 +1,173 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// Native 512-column layouts for dino (World 930201).
++#include "dino.h"
++#include <algorithm>
++#include <array>
++namespace cps2recomp {
++using namespace dino;
++// Proposal only. Existing Ram8/Ram32 read dino RAM in big-endian form.
++// Scheduler evidence: ROM00083C..00096E; 16slots atFF0052, each16bytes.
++// Main task can migrate between slots1and2. Never assume a fixed slot.
++// top-4 andtop-8 are active stack returns, not arbitrary scans of stale RAM.
++enum class DinoScene { Boot, Title, Profiles, Scores, Story, Opening, Demo,
++                       Selection, Transition, Continue, GameOver, Ending, Play };
++DinoScene ReadDinoScene() {
++    for (unsigned slot=0; slot<16; ++slot) {
++        const uint32_t task=0xFF0052+slot*16;
++        const uint8_t status=Ram8(task);
++        if (status==0) continue; // removed/inactive task: stale stack ignored
++        const uint32_t sp=Ram32(task+8), top=Ram32(task+12);
++        if (sp<0xFF0200 || top>=0xFF8000 || (sp&1) || (top&1) ||
++            sp>=top || top-sp>0x400 || top-sp<8) continue;
++        const uint32_t caller=Ram32(top-4);
++        if (caller==0x097A06) return DinoScene::Title; // paid/freeplay credit title
++        if (caller!=0x097C66) continue; // not the main attract loop's active stack
++        switch (Ram32(top-8)) {
++        case 0x097CCE: case 0x097CD2: case 0x097D22: case 0x097D26:
++        case 0x097DA4: case 0x097DAE: return DinoScene::Title;
++        case 0x097DAA: return DinoScene::Profiles;
++        case 0x097CFC: case 0x097D34: case 0x097DB8: case 0x097D58:
++        case 0x097CBA: return DinoScene::Scores;
++        case 0x097CE6: return DinoScene::Story;
++        case 0x097D3A: return DinoScene::Opening;
++        case 0x097CD6: case 0x097D2A: return DinoScene::Demo;
++        }
++    }
++    switch (Ram8(0xFF84D0)) {
++    case 0x04: return DinoScene::Selection;
++    case 0x08: return DinoScene::Transition;
++    case 0x0C: return DinoScene::Play;
++    case 0x10: return Ram8(0xFF84D1)<4 ? DinoScene::Continue : DinoScene::GameOver;
++    case 0x14: case 0x18: return DinoScene::GameOver;
++    case 0x1C: return DinoScene::Ending;
++    default: return DinoScene::Boot;
++    }
++}
++bool DinoSpecialScene() {
++    const auto scene = ReadDinoScene();
++    return scene != DinoScene::Play && scene != DinoScene::Demo;
++}
++bool DinoAttractDemo() { return ReadDinoScene() == DinoScene::Demo; }
++
++
++bool DinoOpeningTile(Machine &, int, int, int, int, uint16_t &, uint16_t &);
++void DinoOpeningAfterFrame(Machine &);
++void DinoStoryAfterFrame(Machine &);
++bool DinoEndingTile(Machine &, int, int, int, int, uint16_t &, uint16_t &);
++void DinoEndingAfterFrame(Machine &);
++namespace {
++Machine *g_machine = nullptr;
++DinoScene g_scene = DinoScene::Boot;
++bool SideTile(int which, int column, int row, int at, uint16_t &code, uint16_t &attr) {
++    if (g_machine && g_scene==DinoScene::Opening)
++        return DinoOpeningTile(*g_machine,which,column,row,at,code,attr);
++    if (g_machine && g_scene==DinoScene::Ending)
++        return DinoEndingTile(*g_machine,which,column,row,at,code,attr);
++    if (which == 0) { code = 0x001F; attr = 0; return true; }
++    return false;
++}
++}
++void DinoSpecialWide(Machine &machine) {
++    auto &wide = machine.video.wide;
++    wide = {};
++    g_machine = &machine;
++    g_scene = ReadDinoScene();
++    if (FeatureOn("widescreen")) {
++        wide.side = Video::kWideSide;
++        wide.tile = SideTile;
++    }
++}
++void DinoSpecialAfterFrame(Machine &machine) {
++    if (!FeatureOn("widescreen") || machine.PictureWidth()!=512) return;
++    const auto scene=ReadDinoScene();
++    if (g_scene == DinoScene::Opening && scene == DinoScene::Title) {
++        // The opening clears its planes and returns to the title within a
++        // raster frame. Finish that frame with the new scene's maps and
++        // callback, rather than retaining a fragment of the forest extension.
++        DinoSpecialWide(machine);
++        for (int y = 0; y < Video::kHeight; ++y)
++            machine.video.RenderLine(y, machine.Picture() + y * 512);
++    }
++    // Scene initialization sometimes paints a solid clear/flash card only
++    // across the original viewport. Its unused map columns still contain
++    // the previous scene (or black). Extend that exact uniform card to the
++    // added sides. No pixels of an illustrated/text scene are replaced.
++    if ((scene != DinoScene::Play && scene != DinoScene::Demo) || Ram8(kStep) != 0x0C) {
++        auto *pixels = machine.Picture();
++        const uint32_t colour = pixels[Video::kWideSide];
++        bool uniform = true;
++        for (int y = 0; y < Video::kHeight && uniform; ++y) {
++            for (int x = Video::kWideSide; x < Video::kWideSide + Video::kWidth; ++x) {
++                if (pixels[y * 512 + x] != colour) { uniform = false; break; }
++            }
++        }
++        if (uniform) {
++            for (int y = 0; y < Video::kHeight; ++y) {
++                std::fill_n(pixels + y * 512, Video::kWideSide, colour);
++                std::fill_n(pixels + y * 512 + Video::kWideSide + Video::kWidth, Video::kWideSide, colour);
++            }
++        }
++    }
++    if (scene==DinoScene::Ending) { DinoEndingAfterFrame(machine); return; }
++    if (scene==DinoScene::Story) { DinoStoryAfterFrame(machine); return; }
++    if (scene==DinoScene::Opening) { DinoOpeningAfterFrame(machine); return; }
++    if (scene==DinoScene::Title) {
++        auto *pixels=machine.Picture();
++        const uint32_t backdrop=pixels[256];
++        for (int y=0;y<224;++y) {
++            std::fill_n(pixels+y*512,64,backdrop);
++            std::fill_n(pixels+y*512+448,64,backdrop);
++        }
++        return;
++    }
++    if (scene==DinoScene::Selection || scene==DinoScene::Continue || scene==DinoScene::GameOver) {
++        std::array<uint32_t,384*224> original;
++        std::array<uint32_t,512> background;
++        auto *pixels=machine.Picture();
++        for (int y=0;y<224;++y) std::copy_n(pixels+y*512+64,384,original.data()+y*384);
++        const unsigned mask=machine.video.layerMask;
++        machine.video.layerMask=8;
++        for (int y=0;y<224;++y) {
++            machine.video.RenderLine(y,background.data());
++            auto *out=pixels+y*512;
++            std::copy_n(background.data()+64,64,background.data());
++            if (scene==DinoScene::Selection) {
++                // The three original selection cards keep all 128 columns;
++                // spread them across the wider landscape beneath the cast.
++                if (y>=144) {
++                    std::copy_n(background.data(),512,out);
++                    const auto *src=original.data()+y*384;
++                    for (int n=0;n<3;++n) std::copy_n(src+n*128,128,out+n*192);
++                } else {
++                    std::copy_n(background.data(),64,out);
++                    std::copy_n(background.data()+448,64,out+448);
++                }
++            } else {
++                // Extend the smoke/background pattern using two further
++                // native-size bays, without exposing the unused tile map's
++                // diagnostic numbers or duplicating character sprites.
++                std::copy_n(background.data()+64,64,out);
++                std::copy_n(background.data()+384,64,out+448);
++            }
++        }
++        machine.video.layerMask=mask;
++        return;
++    }
++    if (scene!=DinoScene::Profiles) return;
++    // The two original 192px panels become two 256px panels. All original
++    // art and lettering stays at its native pixel scale; the stripe design
++    // spans its wider panel and unused off-screen sprites are not exposed.
++    std::array<uint32_t,384*224> original;
++    auto *pixels=machine.Picture();
++    for (int y=0;y<224;++y)
++        std::copy_n(pixels+y*512+64,384,original.data()+y*384);
++    for (int y=0;y<224;++y) {
++        auto *out=pixels+y*512;
++        const auto *src=original.data()+y*384;
++        std::fill_n(out,256,src[0]);
++        std::fill_n(out+256,256,src[192]);
++        std::copy_n(src,192,out+32);
++        std::copy_n(src+192,192,out+288);
++    }
++}
++}
+--- a/games/dino/src/story_wide.cpp
++++ b/games/dino/src/story_wide.cpp
+@@ -0,0 +1,179 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// The story uses isolated comic illustrations, not a hidden landscape.
++// Arrange the original illustration and caption as a wide comic card.
++#include "dino.h"
++
++#include <algorithm>
++#include <vector>
++
++namespace cps2recomp {
++namespace {
++uint32_t StoryCall() {
++    for (unsigned slot = 0; slot < 16; ++slot) {
++        const uint32_t task = 0xFF0052 + slot * 16;
++        if (!Ram8(task)) continue;
++        const uint32_t sp = Ram32(task + 8), top = Ram32(task + 12);
++        if (sp < 0xFF0200 || top >= 0xFF8000 || ((sp | top) & 1) ||
++            sp >= top || top - sp < 12 || top - sp > 0x400) continue;
++        if (Ram32(top - 4) == 0x097C66 && Ram32(top - 8) == 0x097CE6) {
++            return Ram32(top - 12);
++        }
++    }
++    return 0;
++}
++
++uint16_t CaptionTile(const Machine &machine, int x, int y) {
++    const int column = ((machine.cpsA[6] + Video::kFirstColumn + x) & 511) >> 3;
++    const int row = ((machine.cpsA[7] + Video::kFirstLine + y) & 511) >> 3;
++    const uint32_t base = (static_cast<uint32_t>(machine.cpsA[1]) * 256) & 0x3C000;
++    const uint32_t index = (row & 31) + (column << 5) + ((row & 32) << 6);
++    const uint8_t *p = &machine.videoRam[base + index * 4];
++    return static_cast<uint16_t>((p[0] << 8) | p[1]);
++}
++bool BlankCaption(uint16_t code) { return code == 0x1F || code == 0x20 || code == 0x680 || code == 0x690; }
++struct Glyph { int x, y; bool space; };
++
++std::vector<Glyph> Caption(const Machine &machine) {
++    std::vector<Glyph> glyphs;
++    for (int y = 0; y <= 208; y += 8) {
++        int first = 48, last = -1;
++        // Top and bottom together retain punctuation whose top tile is blank.
++        for (int col = 0; col < 48; ++col) {
++            if (!BlankCaption(CaptionTile(machine, col * 8, y)) ||
++                !BlankCaption(CaptionTile(machine, col * 8, y + 8))) {
++                first = std::min(first, col); last = col;
++            }
++        }
++        if (last < first) continue;
++        // y is the row before a glyph when only the second row has ink.
++        // Normal caption rows are found from the first nonblank top row.
++        bool topHasInk = false;
++        for (int col = first; col <= last; ++col)
++            topHasInk |= !BlankCaption(CaptionTile(machine, col * 8, y));
++        if (!topHasInk) continue;
++        if (!glyphs.empty()) glyphs.push_back({0, 0, true});
++        for (int col = first; col <= last; ++col) {
++            glyphs.push_back({col * 8, y,
++                BlankCaption(CaptionTile(machine, col * 8, y)) &&
++                BlankCaption(CaptionTile(machine, col * 8, y + 8))});
++        }
++        y += 8;
++    }
++    return glyphs;
++}
++
++void CopyRect(const std::vector<uint32_t> &source, uint32_t *out,
++              int sx, int sy, int width, int height, int dx, int dy) {
++    for (int y = 0; y < height; ++y) {
++        if (dy + y < 0 || dy + y >= 224 || sy + y < 0 || sy + y >= 224) continue;
++        const int lo = std::max(0, -dx), hi = std::min(width, 512 - dx);
++        if (hi > lo) std::copy_n(source.data() + (sy + y) * 512 + sx + lo,
++                                hi - lo, out + (dy + y) * 512 + dx + lo);
++    }
++}
++} // namespace
++
++static void ComicAfterFrame(Machine &machine, bool ending) {
++    const uint32_t call = ending ? 0 : StoryCall();
++    if (machine.PictureWidth() != 512 || (!ending && (call < 0x0988C0 || call >= 0x098B86))) return;
++    auto &video = machine.video;
++    const unsigned mask = video.layerMask;
++    std::vector<uint32_t> art(512 * 224), text(512 * 224);
++    video.layerMask = mask & ~2u;
++    for (int y = 0; y < 224; ++y) video.RenderLine(y, art.data() + y * 512);
++    video.layerMask = mask & 2u;
++    for (int y = 0; y < 224; ++y) video.RenderLine(y, text.data() + y * 512);
++    video.layerMask = 0;
++    uint32_t blank[512];
++    video.RenderLine(0, blank);
++    video.layerMask = mask;
++    uint32_t *out = machine.Picture();
++    std::fill_n(out, 512 * 224, blank[0]);
++
++    int textX = 296, textWidth = 200, fixedY = -1;
++    bool centreText = false;
++    if (ending) {
++        // Ending's city illustration: a distinct 256x128 original panel.
++        // The ending helper selects this card before calling us.
++        CopyRect(art, out, 112, 48, 256, 128, 16, 48);
++    } else if (call < 0x09895C) {
++        CopyRect(art, out, 128, 32, 256, 128, 16, 48);
++    } else if (call < 0x0989A6) {
++        CopyRect(art, out, 176, 64, 128, 96, 32, 64);
++        textX = 192; textWidth = 304;
++    } else if (call < 0x098A3E) {
++        CopyRect(art, out, 144, 32, 224, 128, 16, 48);
++        textX = 272; textWidth = 224;
++    } else if (call < 0x098AEE) {
++        // Until the slide finishes, the moving panel crosses the middle:
++        // keep it whole. Once settled the two 192px halves can spread apart.
++        if (call < 0x098ACA) {
++            CopyRect(art, out, 64, 0, 384, 168, 64, 0);
++        } else {
++            CopyRect(art, out, 64, 0, 192, 168, 0, 0);
++            CopyRect(art, out, 256, 0, 192, 168, 320, 0);
++        }
++        textX = 32; textWidth = 448; fixedY = 176;
++    } else {
++        CopyRect(art, out, 64, 0, 192, 224, 16, 0);
++        textX = 240; textWidth = 256;
++        if (call < 0x098B42) {
++            // The preceding text-only intertitle has no portrait yet.
++            textX = 32; textWidth = 448; centreText = true;
++        }
++    }
++
++    if (ending) {
++        // The credits begin while the city card is still present. Their
++        // 0120..015F font is 8px high, unlike the 16px dialogue alphabet.
++        // Keep these cells at their actual positions; treating STAFF as
++        // paired caption tiles would wrap it and cut its lower scanlines.
++        bool smallFont = false;
++        for (int y = 0; y < 224; y += 8)
++            for (int x = 0; x < 384; x += 8) {
++                const uint16_t code = CaptionTile(machine, x, y);
++                smallFont |= code >= 0x120 && code <= 0x15F;
++            }
++        if (smallFont) {
++            // The credits scroll by individual pixels: follow the tile
++            // grid's current sub-tile offset, not an assumed y % 8 == 0.
++            const int firstX = -((machine.cpsA[6] + Video::kFirstColumn) & 7);
++            const int firstY = -((machine.cpsA[7] + Video::kFirstLine) & 7);
++            for (int y = firstY; y < 224; y += 8)
++                for (int x = firstX; x < 384; x += 8)
++                    if (!BlankCaption(CaptionTile(machine, x, y)))
++                        CopyRect(text, out, x + 64, y, 8, 8, x + 64, y);
++            return;
++        }
++    }
++
++    const auto glyphs = Caption(machine);
++    std::vector<std::vector<Glyph>> lines(1);
++    const unsigned columns = static_cast<unsigned>(textWidth / 8);
++    for (size_t i = 0; i < glyphs.size();) {
++        while (i < glyphs.size() && glyphs[i].space) ++i;
++        const size_t start = i;
++        while (i < glyphs.size() && !glyphs[i].space) ++i;
++        const size_t length = i - start;
++        if (!length) break;
++        if (!lines.back().empty() && lines.back().size() + 1 + length > columns) lines.emplace_back();
++        if (!lines.back().empty()) lines.back().push_back({0, 0, true});
++        for (size_t n = start; n < i; ++n) {
++            if (lines.back().size() == columns) lines.emplace_back();
++            lines.back().push_back(glyphs[n]);
++        }
++    }
++    int y = fixedY >= 0 ? fixedY : 112 - (static_cast<int>(lines.size()) * 24 - 8) / 2;
++    for (const auto &line : lines) {
++        int x = centreText ? (512 - static_cast<int>(line.size()) * 8) / 2 : textX;
++        for (const auto &g : line) {
++            if (!g.space) CopyRect(text, out, g.x + 64, g.y, 8, 16, x, y);
++            x += 8;
++        }
++        y += 24;
++    }
++}
++
++void DinoStoryAfterFrame(Machine &machine) { ComicAfterFrame(machine, false); }
++void DinoEndingComicAfterFrame(Machine &machine) { ComicAfterFrame(machine, true); }
++} // namespace cps2recomp
+--- a/games/dino/src/widescreen.cpp
++++ b/games/dino/src/widescreen.cpp
+@@ -0,0 +1,305 @@
++// SPDX-License-Identifier: GPL-3.0-only
++// Local experimental widescreen adaptation for dino (World 930201).
++// 512 columns with the board's pixel aspect ratio: 16:9, without stretching.
++// Player screen limits follow the expanded viewport; terrain collisions remain.
++#include "dino.h"
++
++#include <algorithm>
++#include <cstdio>
++#include <cstdlib>
++
++namespace cps2recomp {
++bool DinoSpecialScene();
++namespace {
++using namespace dino;
++constexpr uint32_t kCamera = kVars + 0x73C;
++constexpr int kSide = Video::kWideSide;
++Machine *g_machine = nullptr;
++int g_shift = 0;
++bool g_active = false;
++bool g_fixedRoom = false;
++
++uint16_t Word(uint32_t at) {
++    const auto *p = Program(at);
++    return static_cast<uint16_t>((p[0] << 8) | p[1]);
++}
++uint32_t Long(uint32_t at) {
++    return (static_cast<uint32_t>(Word(at)) << 16) | Word(at + 2);
++}
++int Near(int residue, int target, int period) {
++    return residue + ((target - residue + period / 2) & ~(period - 1));
++}
++
++void MapTile32(int column, int row, uint16_t &code, uint16_t &attributes) {
++    column &= 63;
++    const uint32_t base = (static_cast<uint32_t>(g_machine->cpsA[3]) * 256) & 0x3C000;
++    const uint32_t index = (row & 7) + (column << 3) + ((row & 0x38) << 6);
++    const uint8_t *p = &g_machine->videoRam[base + index * 4];
++    code = static_cast<uint16_t>((p[0] << 8) | p[1]);
++    attributes = static_cast<uint16_t>((p[2] << 8) | p[3]);
++}
++
++// The original foreground streamer: 0214F0 (stage plan), 02152C (32px
++// metatile), 02142A (its four 16px tiles), 0214C0 (VRAM coordinates).
++// World Y points upward; the CPS tile-map row points downward.
++bool ForegroundTile(int x, int y, int row, uint16_t &code, uint16_t &attributes) {
++    const unsigned stage = Ram8(kStage);
++    const int columns = Ram8(kCamera + 0x40), rows = Ram8(kCamera + 0x41);
++    const uint32_t plan = Ram32(kCamera + 0x42);
++    if (stage >= kStages || columns <= 0 || rows <= 0 || plan >= 0x180000 || x < 0 || y < 0) {
++        return false;
++    }
++    // Episode 3 loops this portion of its scenery (original 021520).
++    if (stage == 2) {
++        while ((x & ~31) >= 0x4D00) {
++            x -= 0xF00;
++        }
++    }
++    if ((x >> 8) >= columns || (y >> 8) >= rows) {
++        return false;
++    }
++    const uint16_t block = Word(plan + 2u * static_cast<unsigned>((x >> 8) * rows + (y >> 8)));
++    const uint32_t cells = Long(0x02155E + stage * 4);
++    const uint16_t offset = static_cast<uint16_t>((block << 7) + ((x & 0xE0) >> 1) + 14 - ((y & 0xE0) >> 4));
++    const uint16_t cell = Word(cells + static_cast<int16_t>(offset));
++    const uint32_t quads = Long(0x021454 + stage * 4);
++    const uint32_t tile = quads + static_cast<int16_t>(static_cast<uint16_t>(cell << 4)) +
++                          static_cast<unsigned>(((x & 16) ? 2 : 0) + (row & 1)) * 4;
++    if (tile + 4 > 0x180000) {
++        return false;
++    }
++    code = Word(tile);
++    attributes = Word(tile + 2);
++    if (Ram8(kCamera + 5) == 0x0E) {
++        code = static_cast<uint16_t>(0x6F80 + (attributes >> 10));
++        attributes = 0;
++    }
++    return true;
++}
++
++bool SideTile(int which, int column, int row, int at, uint16_t &code, uint16_t &attributes) {
++    if (!g_active || !g_machine) {
++        return false;
++    }
++    if (which == 0) {
++        // Scroll 1 is the original HUD. Do not repeat its unused map at the
++        // added edges. Tile 001F is all transparent pixels in this ROM set.
++        code = 0x001F;
++        attributes = 0;
++        return true;
++    }
++    if (which == 2) {
++        const auto stage = Ram8(kStage), part = Ram8(kCamera + 0x4A);
++        {
++            // The parallax planes start at map column zero. The
++            // wide view can see one or two earlier columns even when the
++            // foreground stays inside its world: the original streamer left
++            // those wrapped columns as tile 1C00 with attribute 0000/0010.
++            // Continue the first 128px painted background bay to the left.
++            // Only map padding is replaced; black pixels in real art remain.
++            // Scroll 3 wraps every 2048px; the same leading padding is
++            // reached again when a repeating plane crosses that boundary.
++            const int planeX = (g_machine->cpsA[10] + at - g_shift) & 2047;
++            if (planeX >= 1984) {
++                MapTile32(column, row, code, attributes);
++                if (code == 0x1C00 && (attributes == 0 || attributes == 0x10)) {
++                    MapTile32(column & 3, row, code, attributes);
++                    if (code != 0x1C00 || (attributes != 0 && attributes != 0x10)) {
++                        return true;
++                    }
++                }
++            }
++        }
++        if (stage == 6 && part == 1 && at >= 384) {
++            // The mine shaft's further plane contains the mine carts and
++            // machinery behind its 16px rock/wood layer. Extend both planes
++            // from the same middle bay (screen X96..223), so transparent
++            // places in the rock layer reveal matching scenery, not a gap.
++            MapTile32(column - 9, row, code, attributes);
++            return true;
++        }
++        if (stage == 0 && part == 2) {
++            MapTile32(column, row, code, attributes);
++            if (code == 0x1C00 && attributes == 0x0010) {
++                // This city's skyline/water plane stops at 480px. Its
++                // blank-map sentinel marks missing art, not black pixels
++                // within a painting. Continue the last city/water bay with
++                // another original 32px tile from the same row.
++                for (int back = 1; back <= 8; ++back) {
++                    MapTile32(column - back, row, code, attributes);
++                    if (code != 0x1C00 || attributes != 0x0010) {
++                        return true;
++                    }
++                }
++            }
++        }
++        return false;
++    }
++    if (which != 1) {
++        return false;
++    }
++    if (g_fixedRoom) {
++        // This room is a complete 512px map, already painted correctly in
++        // VRAM. Its foreground is positioned below from local coordinates;
++        // the scrolling-stage decoder must not apply the world's camera X.
++        return false;
++    }
++    const int cameraX = Ram16(kCamera + 8), cameraY = Ram16(kCamera + 12);
++    int x = Near(column * 16, cameraX + at - kSide - g_shift, 1024);
++    const int y = Near((0x3E0 - ((row & ~1) * 16)) & 1023, cameraY + 112, 1024);
++    // Episode 7's vertical mine shaft has a 512px plan but only 384px of
++    // painted room. Extend its rock/wood construction with an additional
++    // 128px bay built from the existing middle bay's tiles. This is authored
++    // scenery reuse, not newly recovered hidden art, mirroring or stretching.
++    if (Ram8(kStage) == 6 && Ram8(kCamera + 0x4A) == 1 && x >= 384 && x < 512) {
++        x = 96 + (x - 384);
++    }
++    return ForegroundTile(x, y, row, code, attributes);
++}
++
++int MoveObject(uint32_t, uint16_t, int) {
++    // CPS-1's object renderer subtracts this value; its scroll renderer adds
++    // wide.scroll to the screen position. Keep both transformations aligned.
++    return -g_shift;
++}
++
++void CheckPlan(Machine &machine) {
++    if (!g_active || !std::getenv("DINO_WIDE_CHECK") || machine.frame % 60 != 0) {
++        return;
++    }
++    unsigned same = 0, different = 0, missing = 0;
++    const int cameraX = Ram16(kCamera + 8), cameraY = Ram16(kCamera + 12);
++    const uint32_t base = (static_cast<uint32_t>(machine.cpsA[2]) * 256) & 0x3C000;
++    for (int sx = 96; sx < 288; sx += 16) {
++        const int column = g_fixedRoom ? (sx >> 4) : ((machine.cpsA[8] + Video::kFirstColumn + sx) >> 4) & 63;
++        const int x = g_fixedRoom ? column * 16 : Near(column * 16, cameraX + sx, 1024);
++        for (int sy = 48; sy < 192; sy += 16) {
++            const int row = ((machine.cpsA[9] + Video::kFirstLine + sy) >> 4) & 63;
++            const int y = Near((0x3E0 - ((row & ~1) * 16)) & 1023, cameraY + 112, 1024);
++            uint16_t code, attr;
++            if (!ForegroundTile(x, y, row, code, attr)) {
++                ++missing;
++                continue;
++            }
++            const uint32_t index = (row & 15) + (column << 4) + ((row & 0x30) << 6);
++            const uint8_t *p = &machine.videoRam[base + index * 4];
++            if (code == ((p[0] << 8) | p[1]) && attr == ((p[2] << 8) | p[3])) {
++                ++same;
++            } else {
++                ++different;
++            }
++        }
++    }
++    fprintf(stderr, "dino widescreen plan: frame %llu stage %u part %u camera %d,%d same %u different %u unavailable %u\n",
++            static_cast<unsigned long long>(machine.frame), Ram8(kStage), Ram8(kCamera + 0x4A), cameraX, cameraY,
++            same, different, missing);
++}
++} // namespace
++
++bool DinoStageWide(Machine &machine) {
++    g_machine = &machine;
++    g_active = FeatureOn("widescreen") && !DinoSpecialScene() && Ram8(kStep) == 0x0C && Ram8(kStage) < kStages &&
++               Ram8(kCamera + 0x40) > 0 && Ram8(kCamera + 0x41) > 0;
++    g_fixedRoom = g_active && Ram8(kStage) == 7 && Ram8(kCamera + 0x4A) == 3 &&
++                  Ram8(kCamera + 0x40) == 2 && Ram8(kCamera + 0x41) == 1;
++    if (g_active && !g_fixedRoom && Ram8(kStage) != 2 && Ram16(kCamera + 8) >= Ram8(kCamera + 0x40) * 256) {
++        g_active = false;
++    }
++    auto &wide = machine.video.wide;
++    wide = {};
++    g_shift = 0;
++    if (!g_active) {
++        return false;
++    }
++    wide.side = kSide;
++    wide.linearObjects = true;
++    if (g_fixedRoom) {
++        // The final room is not a streamed world map: its complete plan is
++        // two 256px columns. Both columns match the loaded VRAM exactly.
++        // The upstream viewer retains the preceding world's 0x1120 camera;
++        // use the room's local coordinates for this plane. Like a stage at
++        // its left boundary, actors keep their original screen X and the
++        // extra 128px continues the room to the right; the HUD stays centered.
++        g_shift = -kSide;
++        wide.scroll[1] = machine.cpsA[8] & 1023;
++        wide.scroll[2] = g_shift;
++        wide.object = MoveObject;
++        wide.tile = SideTile;
++        return true;
++    }
++    const int cameraX = Ram16(kCamera + 8);
++    int stageWidth = Ram8(kCamera + 0x40) * 256;
++    if (Ram8(kStage) == 0 && Ram8(kCamera + 0x4A) == 1) {
++        // The manor painting ends after the room's final camera position
++        // (0x210) plus the original viewport. The allocation is padded to
++        // 1024px, and that padding is not additional scenery.
++        stageWidth = std::min(stageWidth, 0x210 + Video::kWidth);
++    }
++    if (Ram8(kStage) == 6) {
++        // The library and its following room have padded 256px plan blocks.
++        // Their last painted column is the native final camera plus 384px,
++        // not the end of that allocation. Keep the wide view inside the art,
++        // retaining the exact same transform for sprites and player bounds.
++        const unsigned part = Ram8(kCamera + 0x4A);
++        if (part == 2) stageWidth = std::min(stageWidth, 0x6F0 + Video::kWidth);
++        if (part == 3) stageWidth = std::min(stageWidth, 0x4F0 + Video::kWidth);
++    }
++    // The native camera RAM can be one update ahead of the scroll register.
++    // At a map boundary use the camera actually being drawn, otherwise that
++    // small difference exposes padding. Vehicle row scrolling keeps its
++    // existing transform; its per-line scroll data is not a single camera.
++    const int drawnCameraX = Ram8(kStage) == 2 ? cameraX :
++        Near((machine.cpsA[8] + Video::kFirstColumn) & 1023, cameraX, 1024);
++    const int viewLeft = std::clamp(drawnCameraX - kSide, 0, std::max(0, stageWidth - Video::kWidth - 2 * kSide));
++    g_shift = std::clamp(drawnCameraX - kSide - viewLeft, -kSide, kSide);
++    wide.scroll[1] = wide.scroll[2] = g_shift;
++    wide.object = MoveObject;
++    wide.tile = SideTile;
++    // No mirroring, cropping or scaling. SideTile documents the mine-shaft
++    // extension, which reuses the room's original tiles as additional scenery.
++    return true;
++}
++
++void DinoSpecialWide(Machine &machine);
++void DinoWideBeforeFrame(Machine &machine) {
++    if (!DinoStageWide(machine)) {
++        DinoSpecialWide(machine);
++    }
++}
++
++void DinoWideAfterFrame(Machine &machine) {
++    CheckPlan(machine);
++}
++
++bool DinoWidePlayerBounds(bool local, int &left, int &right) {
++    if (!g_active || !FeatureOn("widescreen")) {
++        return false;
++    }
++    // The same offset as MoveObject: screen X = world X - camera X +
++    // kSide + g_shift. Keep the original 16px foot-position inset at the
++    // actual picture edges, including the asymmetric stage-end viewports.
++    const int origin = (local ? 0 : Ram16(kCamera + 8)) - kSide - g_shift;
++    left = origin + 16;
++    right = origin + Video::kWidth + 2 * kSide - 16;
++    return true;
++}
++
++
++void RegisterDinoWide() {
++    // The camera can move during this frame, after beforeFrame configured
++    // the wide view. Refresh its transform after the native X streamer, in
++    // the same blanking interval as the camera update, before visible lines
++    // are drawn. This avoids 2px gaps on a return to the left stage boundary
++    // without replacing any raster rows or repainting a finished picture.
++    AddHook(0x021284,"WideCameraTransform",[](M68K &c) {
++        if (g_active && (c.a[6]&0xFFFFFF)==kCamera) {
++            DinoStageWide(static_cast<Machine &>(c.bus));
++        }
++        return false;
++    });
++    TheGame().features.push_back({"widescreen", "Display", "Widescreen 16:9",
++        "Shows additional scenery in 16:9 without stretching. Player movement follows the wider screen. "
++        "Additional scenery is reconstructed or extended using the game's original tiles.", 0});
++    TheGame().widestPicture = [] { return FeatureOn("widescreen") ? Video::kWidth + 2 * kSide : Video::kWidth; };
++}
++} // namespace cps2recomp
